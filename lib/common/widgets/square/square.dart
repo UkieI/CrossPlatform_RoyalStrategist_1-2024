@@ -1,6 +1,6 @@
 import 'package:chess_flutter_app/common/widgets/piece/select_pieces.dart';
 import 'package:chess_flutter_app/common/widgets/piece/pieces.dart';
-import 'package:chess_flutter_app/common/widgets/square/square_promotion.dart';
+
 import 'package:chess_flutter_app/features/chess_board/models/chess_pieces.dart';
 import 'package:chess_flutter_app/utils/constants/colors.dart';
 
@@ -88,7 +88,7 @@ class Square extends StatelessWidget {
       onAcceptWithDetails: (details) {
         int row = position! ~/ 8;
         int col = position! % 8;
-        print('2. $row $col $position');
+
         onPlacePosition!(row, col);
       },
       onWillAcceptWithDetails: (data) {

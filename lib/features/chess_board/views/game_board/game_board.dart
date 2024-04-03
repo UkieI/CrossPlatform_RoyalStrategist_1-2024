@@ -352,9 +352,7 @@ class ChessBoard extends StatelessWidget {
               GetX<ChessBoardController>(
                 builder: (controller) {
                   var width = TDeviceUtils.getScreenWidth(context);
-                  var height = TDeviceUtils.getScreenHeight(context);
                   var xStart = (width) / 8;
-
                   if (controller.isPromotion.value) {
                     return PopUpPawnPromotion(
                       isWhiteTurn: controller.isWhiteTurn,

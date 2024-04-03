@@ -1,6 +1,6 @@
 # chess_flutter_app
 
-A new Flutter project.
+CrossPlatform_RoyalStrategist_1-2024.
 
 ## Getting Started
 
