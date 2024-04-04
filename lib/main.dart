@@ -1,4 +1,4 @@
-import 'package:chess_flutter_app/features/chess_board/views/game_board/game_board.dart';
+import 'package:chess_flutter_app/features/chess_board/views/game_board/game_screen.dart';
 import 'package:chess_flutter_app/utils/constants/text_strings.dart';
 import 'package:chess_flutter_app/utils/theme/theme.dart';
 

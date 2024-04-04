@@ -1,4 +1,4 @@
-import 'package:chess_flutter_app/features/chess_board/logic/counting.dart';
+import 'package:chess_flutter_app/features/chess_board/models/counting.dart';
 import 'package:chess_flutter_app/features/chess_board/models/bishop.dart';
 import 'package:chess_flutter_app/features/chess_board/models/chess_pieces.dart';
 import 'package:chess_flutter_app/utils/helpers/chess_functions.dart';

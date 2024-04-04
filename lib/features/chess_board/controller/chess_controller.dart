@@ -5,6 +5,7 @@ import 'package:audioplayers/audioplayers.dart';
 import 'package:chess_flutter_app/features/chess_board/controller/move_log_controller.dart';
 import 'package:chess_flutter_app/features/chess_board/controller/timer_controller.dart';
 import 'package:chess_flutter_app/features/chess_board/logic/insufficient_material.dart';
+import 'package:chess_flutter_app/features/chess_board/logic/state_string.dart';
 import 'package:chess_flutter_app/features/chess_board/models/bishop.dart';
 import 'package:chess_flutter_app/features/chess_board/models/chess_pieces.dart';
 import 'package:chess_flutter_app/features/chess_board/models/king.dart';
@@ -68,6 +69,10 @@ class ChessBoardController extends GetxController {
   RxBool isPromotion = false.obs;
   RxBool isGameover = false.obs;
   RxInt viewIndex = 0.obs;
+  RxInt noCaptureOrPawnMoves = 0.obs;
+
+  String stateString = "";
+  Map<String, int> stateHistory = {};
 
   // Timer Controller
   late TimerController timerController;
@@ -86,8 +91,9 @@ class ChessBoardController extends GetxController {
       timerController.setClock(time);
       isClock = true;
     }
-
     _initializeBoard();
+    stateString = StateBoardString(isWhiteTurn, board, null, null).toString();
+    stateHistory[stateString] = 1;
   }
 
   void _initializeBoard() {
@@ -181,8 +187,16 @@ class ChessBoardController extends GetxController {
     gameTimeManagement();
     // ìf the new spot have an enemy piece
     bool isCapture = capture(newRow, newCol);
+    // 50 moves rule
+    if (isCapture) {
+      noCaptureOrPawnMoves.value = 0;
+      stateHistory.clear();
+    } else {
+      noCaptureOrPawnMoves.value++;
+    }
+
     // select move is Pawn
-    bool isEnPassant = isPawnMoveEnPassantOrPromote(newRow, newCol);
+    String? enPassant = isPawnMoveEnPassantOrPromote(newRow, newCol);
 
     // moving the selected piece to the selected position.
     board[newRow][newCol] = selectedPiece;
@@ -199,7 +213,7 @@ class ChessBoardController extends GetxController {
     bool? isKingCastle = isKingMoveCastle(newRow, newCol);
 
     bool isCheckmate = gamePopUp();
-
+    updateStateString(isKingCastle, enPassant);
     if (!isPromotion.value) {
       moveLogController.setMove(
         Move(
@@ -240,15 +254,32 @@ class ChessBoardController extends GetxController {
   bool gamePopUp() {
     if (isAnyMoveleft(!isWhiteTurn)) {
       if (checkStatus.value) {
-        popUpCheckmate();
+        popUpDrawDiaglog('Checkmate',
+            '${isWhiteTurn ? "White player " : "Black player "} win. ');
+
         return true;
       } else {
-        popUpDrawDiaglog('DRAW', '${!isWhiteTurn} not have any vaild move. ');
+        popUpDrawDiaglog('DRAW',
+            '${isWhiteTurn ? "White player " : "Black player "} not have any vaild move. ');
       }
     } else if (insuffcientMaterial.insufficientMaterial(board)) {
       popUpDrawDiaglog('DRAW', 'Insufficient Material');
+    } else if (fiftyMoveRule()) {
+      popUpDrawDiaglog('DRAW', '50 move rule');
+    } else if (threeFoldRepetion()) {
+      popUpDrawDiaglog('DRAW', '3 Three fold repetition');
     }
     return false;
+  }
+
+  bool threeFoldRepetion() {
+    return stateHistory[stateString] == 3;
+  }
+
+  bool fiftyMoveRule() {
+    int fullMoves = noCaptureOrPawnMoves.value ~/ 2;
+
+    return fullMoves == 50;
   }
 
   bool? isKingMoveCastle(int newRow, int newCol) {
@@ -285,7 +316,7 @@ class ChessBoardController extends GetxController {
     return null;
   }
 
-  bool isPawnMoveEnPassantOrPromote(int newRow, int newCol) {
+  String? isPawnMoveEnPassantOrPromote(int newRow, int newCol) {
     // if check is a pawn getting to final row of the board
     if (selectedPiece is Pawn) {
       // the white pawn get to the black side board 0
@@ -302,7 +333,8 @@ class ChessBoardController extends GetxController {
             newRow + 1 == 3) {
           blackPiecesTaken.add(capturePieces);
           board[newRow + 1][newCol] = null;
-          return true;
+
+          return "${convertRow(newRow + 1)}${convertCol(newCol)}";
         }
       } else {
         var capturePieces = board[newRow - 1][newCol]; // White Moved
@@ -311,11 +343,24 @@ class ChessBoardController extends GetxController {
             newRow - 1 == 4) {
           whitePiecesTaken.add(capturePieces);
           board[newRow - 1][newCol] = null;
-          return true;
+          return "${convertRow(newRow - 1)}${convertCol(newCol)}";
         }
       }
+      noCaptureOrPawnMoves.value = 0;
+      stateHistory.clear();
     }
-    return false;
+    return "";
+  }
+
+  void updateStateString(bool? isCastleKing, String? enPassantMove) {
+    stateString =
+        StateBoardString(isWhiteTurn, board, isCastleKing, enPassantMove)
+            .toString();
+    if (!stateHistory.containsKey(stateString)) {
+      stateHistory[stateString] = 1;
+    } else {
+      stateHistory[stateString] = stateHistory[stateString]! + 1;
+    }
   }
 
   bool canKingCastling(bool isKingSide, int rowWhitePlayerSide) {

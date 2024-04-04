@@ -78,12 +78,13 @@ class Move {
     }
     // 5. Is Pawn are Promotion Piece
     strFEN += "$eRow$eCol";
+
+    if (isCheckmate) {
+      return strFEN += "#";
+    }
     // 6. Is check
     if (isKingCheck) {
       strFEN += "+";
-    }
-    if (isCheckmate) {
-      strFEN += "#";
     }
 
     return strFEN;

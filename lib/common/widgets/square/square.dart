@@ -55,7 +55,7 @@ class Square extends StatelessWidget {
     return GestureDetector(
       onTap: onTap,
       onPanCancel: onTap,
-      // onPanUpdate: (details) => onTap,
+      onPanStart: (details) => dragController.endDragging(),
       child: Container(
         color: squareColor,
         child: LayoutBuilder(
