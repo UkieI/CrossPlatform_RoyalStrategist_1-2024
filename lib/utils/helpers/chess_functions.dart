@@ -24,6 +24,11 @@ bool isInBoard(int row, int col) {
   return row >= 0 && row < 8 && col >= 0 && col < 8;
 }
 
+bool isDigit(String char) {
+  final codeUnit = char.codeUnitAt(0);
+  return codeUnit >= 48 && codeUnit <= 57;
+}
+
 String getNamePieces(ChessPieces piece) {
   if (piece is Pawn) return 'pawn';
   if (piece is Rook) return 'rook';
@@ -33,6 +38,36 @@ String getNamePieces(ChessPieces piece) {
   if (piece is King) return 'king';
 
   return '';
+}
+
+ChessPieces? recharPiecePEN(String piece) {
+  switch (piece) {
+    case 'P':
+      return Pawn(isWhite: true);
+    case 'p':
+      return Pawn(isWhite: false);
+    case 'R':
+      return Rook(isWhite: true);
+    case 'r':
+      return Rook(isWhite: false);
+    case 'N':
+      return Knight(isWhite: true);
+    case 'n':
+      return Knight(isWhite: false);
+    case 'B':
+      return Bishop(isWhite: true);
+    case 'b':
+      return Bishop(isWhite: false);
+    case 'Q':
+      return Queen(isWhite: true);
+    case 'q':
+      return Queen(isWhite: false);
+    case 'K':
+      return King(isWhite: true);
+    case 'k':
+      return King(isWhite: false);
+  }
+  return null;
 }
 
 ChessPieces? reConvertPiece(String piece, bool isWhite) {

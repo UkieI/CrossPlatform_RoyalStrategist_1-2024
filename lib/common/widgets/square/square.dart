@@ -55,7 +55,8 @@ class Square extends StatelessWidget {
     return GestureDetector(
       onTap: onTap,
       onPanCancel: onTap,
-      onPanStart: (details) => dragController.endDragging(),
+
+      // onPanStart: (details) => dragController.endDragging(),
       child: Container(
         color: squareColor,
         child: LayoutBuilder(
@@ -88,8 +89,10 @@ class Square extends StatelessWidget {
       onAcceptWithDetails: (details) {
         int row = position! ~/ 8;
         int col = position! % 8;
+        dragController.dragTagetPosition = [row, col];
 
-        onPlacePosition!(row, col);
+        return;
+        // dragController.endDragging();
       },
       onWillAcceptWithDetails: (data) {
         dragController.startDragging();
@@ -136,7 +139,14 @@ class Square extends StatelessWidget {
         ),
       ),
       onDragStarted: () => dragController.startDragging(),
-      onDragCompleted: () => dragController.endDragging(),
+      // onDraggableCanceled: (velocity, offset) => dragController.endDragging(),
+      onDragCompleted: () {
+        onPlacePosition!(dragController.dragTagetPosition[0],
+            dragController.dragTagetPosition[1]);
+        dragController.dragTagetPosition = [-1, -1];
+        dragController.endDragging();
+      },
+      onDragEnd: (details) => {},
       childWhenDragging: Container(),
       child: isWhiteTurn == piece!.isWhite
           ? Piece(
@@ -288,13 +298,13 @@ class Square extends StatelessWidget {
 }
 
 // class DragController extends GetxController {
-//   RxBool isRelease = false.obs;
-//   RxList<int> dragTagetPosition = [-1, -1].obs;
+
 // }
 
 class DragController extends GetxController {
   var isDragging = false.obs;
-
+  RxBool isRelease = false.obs;
+  List<int> dragTagetPosition = [-1, -1];
   void startDragging() {
     isDragging.value = true;
   }

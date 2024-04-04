@@ -36,6 +36,7 @@ class King extends ChessPieces {
       }
       candidateMoves.add([newRow, newCol]);
     }
+
     return candidateMoves;
   }
 

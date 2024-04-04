@@ -4,6 +4,7 @@ import 'package:audioplayers/audioplayers.dart';
 
 import 'package:chess_flutter_app/features/chess_board/controller/move_log_controller.dart';
 import 'package:chess_flutter_app/features/chess_board/controller/timer_controller.dart';
+import 'package:chess_flutter_app/features/chess_board/logic/game_state.dart';
 import 'package:chess_flutter_app/features/chess_board/logic/insufficient_material.dart';
 import 'package:chess_flutter_app/features/chess_board/logic/state_string.dart';
 import 'package:chess_flutter_app/features/chess_board/models/bishop.dart';
@@ -14,6 +15,7 @@ import 'package:chess_flutter_app/features/chess_board/models/move.dart';
 import 'package:chess_flutter_app/features/chess_board/models/pawn.dart';
 import 'package:chess_flutter_app/features/chess_board/models/queen.dart';
 import 'package:chess_flutter_app/features/chess_board/models/rook.dart';
+
 import 'package:chess_flutter_app/utils/constants/image_strings.dart';
 import 'package:chess_flutter_app/utils/helpers/chess_functions.dart';
 import 'package:flutter/material.dart';
@@ -69,15 +71,12 @@ class ChessBoardController extends GetxController {
   RxBool isPromotion = false.obs;
   RxBool isGameover = false.obs;
   RxInt viewIndex = 0.obs;
-  RxInt noCaptureOrPawnMoves = 0.obs;
-
-  String stateString = "";
-  Map<String, int> stateHistory = {};
 
   // Timer Controller
   late TimerController timerController;
   late MoveLogController moveLogController;
   InsuffcientMaterial insuffcientMaterial = InsuffcientMaterial();
+  GameState gameState = GameState();
 
   final player = AudioPlayer();
 
@@ -92,15 +91,18 @@ class ChessBoardController extends GetxController {
       isClock = true;
     }
     _initializeBoard();
-    stateString = StateBoardString(isWhiteTurn, board, null, null).toString();
-    stateHistory[stateString] = 1;
+    gameState.stateString =
+        StateBoardString(isWhiteTurn, board, null, null).toString();
+    gameState.stateHistory[gameState.stateString] = 1;
   }
 
   void _initializeBoard() {
     List<List<ChessPieces?>> newBoard =
         List.generate(8, (index) => List.generate(8, (index) => null));
 
-    //Pawns
+    //king
+
+    // //Pawns
     for (int i = 0; i < 8; i++) {
       newBoard[1][i] = Pawn(isWhite: false);
       newBoard[6][i] = Pawn(isWhite: true);
@@ -133,6 +135,8 @@ class ChessBoardController extends GetxController {
     newBoard[7][4] = King(isWhite: true);
 
     board = newBoard;
+    // String fen = "7k/3N2qp/b5r1/2p1Q1N1/Pp4PK/7P/1P3p2/6r1 w - - 7 4";
+    // loadPositionFormPen(fen);
   }
 
   void pieceSelected(int row, int col) {
@@ -166,6 +170,7 @@ class ChessBoardController extends GetxController {
     validMoves.assignAll(calculateRealValidMove(
             selectedPosition[0], selectedPosition[1], selectedPiece, true)
         .map((innerList) => innerList.obs));
+
     if (selectedPiece != null) {
       bool isKingCheck = isWhiteTurn ? isWhiteKingMove : isBlackKingMove;
       if (selectedPiece! is King && !isKingCheck) {
@@ -189,10 +194,10 @@ class ChessBoardController extends GetxController {
     bool isCapture = capture(newRow, newCol);
     // 50 moves rule
     if (isCapture) {
-      noCaptureOrPawnMoves.value = 0;
-      stateHistory.clear();
+      gameState.noCaptureOrPawnMoves.value = 0;
+      gameState.stateHistory.clear();
     } else {
-      noCaptureOrPawnMoves.value++;
+      gameState.noCaptureOrPawnMoves.value++;
     }
 
     // select move is Pawn
@@ -213,7 +218,7 @@ class ChessBoardController extends GetxController {
     bool? isKingCastle = isKingMoveCastle(newRow, newCol);
 
     bool isCheckmate = gamePopUp();
-    updateStateString(isKingCastle, enPassant);
+    gameState.updateStateString(isWhiteTurn, board, isKingCastle, enPassant);
     if (!isPromotion.value) {
       moveLogController.setMove(
         Move(
@@ -249,37 +254,6 @@ class ChessBoardController extends GetxController {
             timerController.timerWhiteTime.value, _context, isGameover);
       }
     }
-  }
-
-  bool gamePopUp() {
-    if (isAnyMoveleft(!isWhiteTurn)) {
-      if (checkStatus.value) {
-        popUpDrawDiaglog('Checkmate',
-            '${isWhiteTurn ? "White player " : "Black player "} win. ');
-
-        return true;
-      } else {
-        popUpDrawDiaglog('DRAW',
-            '${isWhiteTurn ? "White player " : "Black player "} not have any vaild move. ');
-      }
-    } else if (insuffcientMaterial.insufficientMaterial(board)) {
-      popUpDrawDiaglog('DRAW', 'Insufficient Material');
-    } else if (fiftyMoveRule()) {
-      popUpDrawDiaglog('DRAW', '50 move rule');
-    } else if (threeFoldRepetion()) {
-      popUpDrawDiaglog('DRAW', '3 Three fold repetition');
-    }
-    return false;
-  }
-
-  bool threeFoldRepetion() {
-    return stateHistory[stateString] == 3;
-  }
-
-  bool fiftyMoveRule() {
-    int fullMoves = noCaptureOrPawnMoves.value ~/ 2;
-
-    return fullMoves == 50;
   }
 
   bool? isKingMoveCastle(int newRow, int newCol) {
@@ -346,34 +320,27 @@ class ChessBoardController extends GetxController {
           return "${convertRow(newRow - 1)}${convertCol(newCol)}";
         }
       }
-      noCaptureOrPawnMoves.value = 0;
-      stateHistory.clear();
+      gameState.noCaptureOrPawnMoves.value = 0;
+      gameState.stateHistory.clear();
     }
     return "";
   }
 
-  void updateStateString(bool? isCastleKing, String? enPassantMove) {
-    stateString =
-        StateBoardString(isWhiteTurn, board, isCastleKing, enPassantMove)
-            .toString();
-    if (!stateHistory.containsKey(stateString)) {
-      stateHistory[stateString] = 1;
-    } else {
-      stateHistory[stateString] = stateHistory[stateString]! + 1;
-    }
-  }
-
   bool canKingCastling(bool isKingSide, int rowWhitePlayerSide) {
-    int colRookPosition = isKingSide ? 7 : 0;
     int colKingPosition = 4;
     if (checkStatus.value) {
       return false;
     }
-
-    if (board[rowWhitePlayerSide][colRookPosition]! is! Rook ||
-        board[rowWhitePlayerSide][colKingPosition]! is! King) {
+    if (isWhiteTurn) {
+      if (isWhiteKingMove) return false;
+    } else if (isWhiteKingMove) {
       return false;
     }
+
+    // if (!(board[rowWhitePlayerSide][colRookPosition]! is Rook &&
+    //     board[rowWhitePlayerSide][colKingPosition]! is King)) {
+    //   return false;
+    // }
 
     if (isKingSide) {
       for (int i = 5; i < 7; i++) {
@@ -436,7 +403,65 @@ class ChessBoardController extends GetxController {
     return false;
   }
 
+  void loadPositionFormfen(String fen) {
+    List<List<ChessPieces?>> newBoard =
+        List.generate(8, (index) => List.generate(8, (index) => null));
+    String? fenBoard = fen.split(' ')[0];
+    int row = 0, col = 0;
+
+    for (var rune in fenBoard.runes) {
+      String char = String.fromCharCode(rune);
+      if (char == '/') {
+        row++;
+        col = 0;
+      } else {
+        if (isDigit(char)) {
+          col += int.parse(char);
+        } else {
+          // bool isWhite = (char.toUpperCase() == char);
+          ChessPieces pieces = recharPiecePEN(char)!;
+          if (pieces is King && pieces.isWhite) {
+            whiteKingPositions = [row, col];
+            row == 7 && col == 4
+                ? isWhiteKingMove = false
+                : isWhiteKingMove = true;
+          }
+          if (pieces is King && !pieces.isWhite) {
+            blackKingPositions = [row, col];
+            row == 0 && col == 4
+                ? isBlackKingMove = false
+                : isBlackKingMove = true;
+          }
+          newBoard[row][col] = pieces;
+          col++;
+        }
+      }
+    }
+    board = newBoard;
+  }
+
   //Pop up game state
+  bool gamePopUp() {
+    if (isAnyMoveleft(!isWhiteTurn)) {
+      if (checkStatus.value) {
+        popUpDrawDiaglog('Checkmate',
+            '${isWhiteTurn ? "White player " : "Black player "} win. ');
+
+        return true;
+      } else {
+        popUpDrawDiaglog('DRAW',
+            '${isWhiteTurn ? "White player " : "Black player "} not have any vaild move. ');
+      }
+    } else if (insuffcientMaterial.insufficientMaterial(board)) {
+      popUpDrawDiaglog('DRAW', 'Insufficient Material');
+    } else if (gameState.fiftyMoveRule()) {
+      popUpDrawDiaglog('DRAW', '50 move rule');
+    } else if (gameState.threeFoldRepetion()) {
+      popUpDrawDiaglog('DRAW', '3 Three fold repetition');
+    }
+    return false;
+  }
+
   void popUpDrawDiaglog(String title, String content) {
     showDialog(
       context: _context,
@@ -666,15 +691,16 @@ class ChessBoardController extends GetxController {
 
   void resetGame() {
     // Navigator.pop(_context);
-    _initializeBoard();
+    whiteKingPositions = [7, 4];
+    blackKingPositions = [0, 4];
+
     whitePiecesTaken.clear();
     blackPiecesTaken.clear();
     whiteTakenMap.clear();
     blackTakenMap.clear();
-    whiteKingPositions = [7, 4];
-    blackKingPositions = [0, 4];
     selectedPosition.value = [-1, -1];
     selectedPiece = null;
+    capturePieces = null;
     previousSelected = [8, 8];
     previousMoved = [8, 8];
     checkStatus.value = false;
@@ -686,11 +712,17 @@ class ChessBoardController extends GetxController {
     whiteValue.value = 0;
     blackValue.value = 0;
     validMoves.value = [];
+
+    // Game State class
+    gameState.noCaptureOrPawnMoves.value = 0;
+    gameState.stateHistory = {};
+    gameState.stateString = "";
+
     moveLogController.moveLogs.clear();
     if (isClock) {
       timerController.setClock(time);
     }
-
+    _initializeBoard();
     update();
   }
 }

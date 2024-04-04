@@ -26,7 +26,6 @@ class StateBoardString {
 
   @override
   String toString() {
-    print(sb);
     return sb.toString();
   }
 
@@ -91,6 +90,7 @@ class StateBoardString {
   void addEnPassant(String? enPassantMove) {
     if (enPassantMove != null) {
       sb += enPassantMove;
+      return;
     }
     sb += '-';
   }
