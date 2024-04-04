@@ -18,8 +18,8 @@ class SquarePromotion extends StatelessWidget {
   Widget _chessPiecesIcon() {
     return piece != null
         ? Image.asset(piece!.isWhite
-            ? 'assets/images/white_${getImagePieces(piece!)}.png'
-            : 'assets/images/black_${getImagePieces(piece!)}.png')
+            ? 'assets/images/white_${getNamePieces(piece!)}.png'
+            : 'assets/images/black_${getNamePieces(piece!)}.png')
         : const Center(child: SizedBox());
   }
 

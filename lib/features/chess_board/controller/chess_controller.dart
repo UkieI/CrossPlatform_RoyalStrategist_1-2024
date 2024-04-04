@@ -1,8 +1,10 @@
 // ignore_for_file: unnecessary_overrides, invalid_use_of_protected_member
 
 import 'package:audioplayers/audioplayers.dart';
+
 import 'package:chess_flutter_app/features/chess_board/controller/move_log_controller.dart';
 import 'package:chess_flutter_app/features/chess_board/controller/timer_controller.dart';
+import 'package:chess_flutter_app/features/chess_board/logic/insufficient_material.dart';
 import 'package:chess_flutter_app/features/chess_board/models/bishop.dart';
 import 'package:chess_flutter_app/features/chess_board/models/chess_pieces.dart';
 import 'package:chess_flutter_app/features/chess_board/models/king.dart';
@@ -48,8 +50,8 @@ class ChessBoardController extends GetxController {
   RxList<int> selectedPosition = [-1, -1].obs;
 
   // the start position that the previous selected pieces move
-  RxList<int> previousSelected = [8, 8].obs;
-  RxList<int> previousMoved = [8, 8].obs;
+  List<int> previousSelected = [8, 8];
+  List<int> previousMoved = [8, 8];
 
   // iniitial postition of king
   List<int> whiteKingPositions = [7, 4];
@@ -64,12 +66,13 @@ class ChessBoardController extends GetxController {
   RxBool isRotation = false.obs;
   RxBool checkStatus = false.obs;
   RxBool isPromotion = false.obs;
-  RxBool isOver = false.obs;
+  RxBool isGameover = false.obs;
   RxInt viewIndex = 0.obs;
 
   // Timer Controller
   late TimerController timerController;
   late MoveLogController moveLogController;
+  InsuffcientMaterial insuffcientMaterial = InsuffcientMaterial();
 
   final player = AudioPlayer();
 
@@ -77,10 +80,10 @@ class ChessBoardController extends GetxController {
   void onInit() {
     super.onInit();
     moveLogController = Get.put(MoveLogController());
+
     if (time != 0) {
       timerController = Get.put(TimerController());
       timerController.setClock(time);
-
       isClock = true;
     }
 
@@ -88,15 +91,8 @@ class ChessBoardController extends GetxController {
   }
 
   void _initializeBoard() {
-    // initialize the board with null,
-    // RxList<RxList<ChessPieces?>> newBoard =
-    //     List.generate(8, (_) => List.filled(8, null).obs).obs;
-
     List<List<ChessPieces?>> newBoard =
         List.generate(8, (index) => List.generate(8, (index) => null));
-
-    // //place random pieces
-    // newBoard[3][3] = Rook(isWhite: true, currentPosition: [3, 3]);
 
     //Pawns
     for (int i = 0; i < 8; i++) {
@@ -134,7 +130,7 @@ class ChessBoardController extends GetxController {
   }
 
   void pieceSelected(int row, int col) {
-    if (isOver.value) {
+    if (isGameover.value) {
       return;
     }
     if (!isInBoard(row, col)) {
@@ -181,6 +177,147 @@ class ChessBoardController extends GetxController {
     update();
   }
 
+  void movePiece(int newRow, int newCol) {
+    gameTimeManagement();
+    // ìf the new spot have an enemy piece
+    bool isCapture = capture(newRow, newCol);
+    // select move is Pawn
+    bool isEnPassant = isPawnMoveEnPassantOrPromote(newRow, newCol);
+
+    // moving the selected piece to the selected position.
+    board[newRow][newCol] = selectedPiece;
+    board[selectedPosition[0]][selectedPosition[1]] = null;
+
+    // check king ís check
+    checkStatus.value = isKingInCheck(!isWhiteTurn);
+
+    // play sound
+    if (!isCapture) player.play(AssetSource(TImages.audioMove));
+    if (checkStatus.value) player.play(AssetSource(TImages.audioCheck));
+
+    // if the moveing piece is king
+    bool? isKingCastle = isKingMoveCastle(newRow, newCol);
+
+    bool isCheckmate = gamePopUp();
+
+    if (!isPromotion.value) {
+      moveLogController.setMove(
+        Move(
+          index: viewIndex.value,
+          chessPiece: selectedPiece!,
+          startRow: selectedPosition[0],
+          startCol: selectedPosition[1],
+          endRow: newRow,
+          endCol: newCol,
+          capturePiece: capturePieces,
+          isKingCheck: checkStatus.value,
+          isCasteKingSide: isKingCastle,
+          isCheckmate: isCheckmate,
+        ),
+      );
+      capturePieces = null;
+      selectedPiece = null;
+    }
+
+    // update Status
+    updateStatus(newRow, newCol);
+  }
+
+  void gameTimeManagement() {
+    if (isClock) {
+      if (isWhiteTurn) {
+        timerController.stopWhiteTimer();
+        timerController.startBlackTimer(
+            timerController.timerBlackTime.value, _context, isGameover);
+      } else {
+        timerController.stopBlackTimer();
+        timerController.startWhiteTimer(
+            timerController.timerWhiteTime.value, _context, isGameover);
+      }
+    }
+  }
+
+  bool gamePopUp() {
+    if (isAnyMoveleft(!isWhiteTurn)) {
+      if (checkStatus.value) {
+        popUpCheckmate();
+        return true;
+      } else {
+        popUpDrawDiaglog('DRAW', '${!isWhiteTurn} not have any vaild move. ');
+      }
+    } else if (insuffcientMaterial.insufficientMaterial(board)) {
+      popUpDrawDiaglog('DRAW', 'Insufficient Material');
+    }
+    return false;
+  }
+
+  bool? isKingMoveCastle(int newRow, int newCol) {
+    if (selectedPiece! is King) {
+      bool isKingCheck = isWhiteTurn ? isWhiteKingMove : isBlackKingMove;
+      // store postion and checking king are move
+      if (selectedPiece!.isWhite) {
+        if (!isWhiteKingMove) isWhiteKingMove = true;
+        whiteKingPositions = [newRow, newCol];
+      } else {
+        if (!isBlackKingMove) isBlackKingMove = true;
+        blackKingPositions = [newRow, newCol];
+      }
+
+      // If the king castling, moving rook to right place.
+      if (!isKingCheck && isCastling) {
+        if (newCol == 2) {
+          selectedPiece = board[newRow][0]; // ROOK
+          selectedPosition.value = [newRow, 0];
+          board[selectedPosition[0]][3] = selectedPiece;
+          board[selectedPosition[0]][selectedPosition[1]] = null;
+          return false;
+        } else if (newCol == 6) {
+          selectedPiece = board[newRow][7]; // ROOK
+          selectedPosition.value = [newRow, 7];
+          board[selectedPosition[0]][5] = selectedPiece;
+          board[selectedPosition[0]][selectedPosition[1]] = null;
+          return true;
+        }
+      }
+
+      isCastling = false;
+    }
+    return null;
+  }
+
+  bool isPawnMoveEnPassantOrPromote(int newRow, int newCol) {
+    // if check is a pawn getting to final row of the board
+    if (selectedPiece is Pawn) {
+      // the white pawn get to the black side board 0
+      // the black pawn get to the white side board 7
+      if (newRow == 0 || newRow == 7) {
+        isPromotion.value = true;
+      }
+
+      // pawns can kill like En Passant
+      if (isWhiteTurn) {
+        var capturePieces = board[newRow + 1][newCol]; // Black Moved
+        if (capturePieces != null &&
+            capturePieces.isWhite != isWhiteTurn &&
+            newRow + 1 == 3) {
+          blackPiecesTaken.add(capturePieces);
+          board[newRow + 1][newCol] = null;
+          return true;
+        }
+      } else {
+        var capturePieces = board[newRow - 1][newCol]; // White Moved
+        if (capturePieces != null &&
+            capturePieces.isWhite != isWhiteTurn &&
+            newRow - 1 == 4) {
+          whitePiecesTaken.add(capturePieces);
+          board[newRow - 1][newCol] = null;
+          return true;
+        }
+      }
+    }
+    return false;
+  }
+
   bool canKingCastling(bool isKingSide, int rowWhitePlayerSide) {
     int colRookPosition = isKingSide ? 7 : 0;
     int colKingPosition = 4;
@@ -213,13 +350,13 @@ class ChessBoardController extends GetxController {
     return true;
   }
 
-  bool areCapture(int newRow, int newCol) {
+  bool capture(int newRow, int newCol) {
     bool isCapture = false;
     // ìf the new spot have an enemy piece
     if (board[newRow][newCol] != null) {
       // add the captured piece to the appropriate list
-      var capturePieces = board[newRow][newCol];
-      countMap(capturePieces!);
+      capturePieces = board[newRow][newCol];
+      countMapCapture(capturePieces!);
       // countDuplicateNumbers(capturePieces, false);
       isCapture = true;
       player.play(AssetSource(TImages.audioCapture));
@@ -227,7 +364,7 @@ class ChessBoardController extends GetxController {
     return isCapture;
   }
 
-  void countMap(ChessPieces capturePieces) {
+  void countMapCapture(ChessPieces capturePieces) {
     String name = capturePieces.toString();
     if (capturePieces.isWhite) {
       if (whiteTakenMap.containsKey(name)) {
@@ -250,123 +387,60 @@ class ChessBoardController extends GetxController {
     }
   }
 
-  void movePiece(int newRow, int newCol) {
+  bool isHasPrefix(ChessPieces pieces, int row, int col) {
+    return false;
+  }
+
+  //Pop up game state
+  void popUpDrawDiaglog(String title, String content) {
+    showDialog(
+      context: _context,
+      builder: (context) => AlertDialog(
+        title: Text(title),
+        content: Text(content),
+        // content:
+        //     !isWhiteTurn ? const Text("White Win") : const Text("Black Win"),
+        actions: [
+          TextButton(
+              onPressed: () {
+                resetGame();
+                Navigator.of(context).pop();
+              },
+              child: const Text("Play again"))
+        ],
+      ),
+    );
+  }
+
+  void popUpCheckmate() {
     if (isClock) {
-      if (isWhiteTurn) {
-        timerController.stopWhiteTimer();
-        timerController.startBlackTimer(
-            timerController.timerBlackTime.value, _context, isOver);
-      } else {
-        timerController.stopBlackTimer();
-        timerController.startWhiteTimer(
-            timerController.timerWhiteTime.value, _context, isOver);
-      }
+      isWhiteTurn
+          ? timerController.stopBlackTimer()
+          : timerController.stopWhiteTimer();
     }
-
-    bool isCapture = false;
-
-    // ìf the new spot have an enemy piece
-    if (board[newRow][newCol] != null) {
-      // add the captured piece to the appropriate list
-      capturePieces = board[newRow][newCol];
-      countMap(capturePieces!);
-      // countDuplicateNumbers(capturePieces, false);
-      isCapture = true;
-      player.play(AssetSource(TImages.audioCapture));
-    }
-
-    // bool isCapture = areCapture(newRow, newCol);
-    // if the moveing piece is king
-    bool isKingCheck = isWhiteTurn ? isWhiteKingMove : isBlackKingMove;
-    if (selectedPiece is King) {
-      // store postion and checking king are move
-      if (selectedPiece!.isWhite) {
-        if (!isWhiteKingMove) isWhiteKingMove = true;
-        whiteKingPositions = [newRow, newCol];
-      } else {
-        if (!isBlackKingMove) isBlackKingMove = true;
-        blackKingPositions = [newRow, newCol];
-      }
-    }
-    // if check is a pawn getting to final row of the board
-    if (selectedPiece is Pawn) {
-      // the white pawn get to the black side board 0
-      // the black pawn get to the white side board 7
-      if (newRow == 0 || newRow == 7) {
-        isPromotion.value = true;
-      }
-
-      // pawns can kill like En Passant
-      if (isWhiteTurn) {
-        var capturePieces = board[newRow + 1][newCol]; // Black Moved
-        if (capturePieces != null &&
-            capturePieces.isWhite != isWhiteTurn &&
-            newRow + 1 == 3) {
-          blackPiecesTaken.add(capturePieces);
-          board[newRow + 1][newCol] = null;
-        }
-      } else {
-        var capturePieces = board[newRow - 1][newCol]; // White Moved
-        if (capturePieces != null &&
-            capturePieces.isWhite != isWhiteTurn &&
-            newRow - 1 == 4) {
-          whitePiecesTaken.add(capturePieces);
-          board[newRow - 1][newCol] = null;
-        }
-      }
-    }
-    // moving the selected piece to the selected position.
-    board[newRow][newCol] = selectedPiece;
-    board[selectedPosition[0]][selectedPosition[1]] = null;
-
-    checkStatus.value = isKingInCheck(!isWhiteTurn);
-
-    // play sound
-    if (!isCapture) player.play(AssetSource(TImages.audioMove));
-    if (checkStatus.value) player.play(AssetSource(TImages.audioCheck));
-
-    // If the king castling, moving rook to right place.
-    if (selectedPiece! is King && !isKingCheck && isCastling) {
-      if (newCol == 2) {
-        selectedPiece = board[newRow][0]; // ROOK
-        selectedPosition.value = [newRow, 0];
-        board[selectedPosition[0]][3] = selectedPiece;
-        board[selectedPosition[0]][selectedPosition[1]] = null;
-      } else if (newCol == 6) {
-        selectedPiece = board[newRow][7]; // ROOK
-        selectedPosition.value = [newRow, 7];
-        board[selectedPosition[0]][5] = selectedPiece;
-        board[selectedPosition[0]][selectedPosition[1]] = null;
-      }
-      isCastling = false;
-    }
-
-    popUpAnounment();
-
-    if (!isPromotion.value) {
-      moveLogController.setMove(
-        Move(
-          index: viewIndex.value,
-          chessPiece: selectedPiece!,
-          startRow: selectedPosition[0],
-          startCol: selectedPosition[1],
-          endRow: newRow,
-          endCol: newCol,
-          capturePiece: capturePieces,
-          isKingCheck: checkStatus.value,
-        ),
-      );
-      capturePieces = null;
-    }
-    // update Status
-    updateStatus(newRow, newCol);
+    showDialog(
+      context: _context,
+      builder: (context) => AlertDialog(
+        title: const Text("CHECK MATE"),
+        content:
+            !isWhiteTurn ? const Text("White Win") : const Text("Black Win"),
+        actions: [
+          TextButton(
+              onPressed: () {
+                resetGame();
+                Navigator.of(context).pop();
+              },
+              child: const Text("Play again"))
+        ],
+      ),
+    );
   }
 
   void updateStatus(int newRow, int newCol) {
     // update Status
-    previousSelected.value = [selectedPosition[0], selectedPosition[1]];
-    previousMoved.value = [newRow, newCol];
-    selectedPiece = null;
+    previousSelected = [selectedPosition[0], selectedPosition[1]];
+    previousMoved = [newRow, newCol];
+
     selectedPosition.value = [-1, -1];
     validMoves = <RxList<int>>[].obs;
     viewIndex.value++;
@@ -375,6 +449,7 @@ class ChessBoardController extends GetxController {
     update();
   }
 
+  // calculate move
   bool isKingInCheck(bool isWhiteKing) {
     List<int> kingPositons =
         isWhiteKing ? whiteKingPositions : blackKingPositions;
@@ -394,53 +469,6 @@ class ChessBoardController extends GetxController {
       }
     }
     return false;
-  }
-
-  void popUpAnounment() {
-    if (isAnyMoveleft(!isWhiteTurn)) {
-      if (isKingInCheck(!isWhiteTurn)) {
-        if (isClock) {
-          isWhiteTurn
-              ? timerController.stopBlackTimer()
-              : timerController.stopWhiteTimer();
-        }
-
-        showDialog(
-          context: _context,
-          builder: (context) => AlertDialog(
-            title: const Text("CHECK MATE"),
-            content: !isWhiteTurn
-                ? const Text("White Win")
-                : const Text("Black Win"),
-            actions: [
-              TextButton(
-                  onPressed: () {
-                    resetGame();
-                    Navigator.of(context).pop();
-                  },
-                  child: const Text("Play again"))
-            ],
-          ),
-        );
-      } else {
-        showDialog(
-          context: _context,
-          builder: (context) => AlertDialog(
-            title: const Text("DRAW"),
-            // content:
-            //     !isWhiteTurn ? const Text("White Win") : const Text("Black Win"),
-            actions: [
-              TextButton(
-                  onPressed: () {
-                    resetGame();
-                    Navigator.of(context).pop();
-                  },
-                  child: const Text("Play again"))
-            ],
-          ),
-        );
-      }
-    }
   }
 
   bool isAnyMoveleft(bool isWhiteKing) {
@@ -468,8 +496,8 @@ class ChessBoardController extends GetxController {
     if (piece == null) {
       return [];
     }
-    candidateMoves = piece.move(
-        row, col, board, previousMoved.value, previousSelected.value);
+    candidateMoves =
+        piece.move(row, col, board, previousMoved, previousSelected);
     return candidateMoves;
   }
 
@@ -536,11 +564,23 @@ class ChessBoardController extends GetxController {
     return !kingInCheck;
   }
 
-  void showPopupPromotion(ChessPieces chessPiece) {
-    isPromotion.value = false;
+  void pawnPromotion(ChessPieces chessPiece) {
     board[previousMoved[0]][previousMoved[1]] = chessPiece;
+
+    isPromotion.value = false;
     checkStatus.value = isKingInCheck(isWhiteTurn);
-    player.play(AssetSource(TImages.audioCheck));
+
+    update();
+    bool isCheckmate = false;
+    if (isAnyMoveleft(isWhiteTurn)) {
+      if (checkStatus.value) {
+        popUpCheckmate();
+        isCheckmate = true;
+      } else {
+        popUpDrawDiaglog('DRAW', '${!isWhiteTurn} not have any vaild move. ');
+      }
+    }
+
     moveLogController.setMove(
       Move(
         index: viewIndex.value,
@@ -551,12 +591,19 @@ class ChessBoardController extends GetxController {
         endCol: previousMoved[1],
         capturePiece: capturePieces,
         isKingCheck: checkStatus.value,
+        promotionPiece: chessPiece,
+        isCheckmate: isCheckmate,
+
+        // isCastle: false
       ),
     );
+    player.play(AssetSource(TImages.audioPromote));
+    selectedPiece = null;
     capturePieces = null;
     update();
   }
 
+  // view function
   bool isSelected(int row, int col) {
     return selectedPosition[0] == row && selectedPosition[1] == col;
   }
@@ -583,14 +630,14 @@ class ChessBoardController extends GetxController {
     blackKingPositions = [0, 4];
     selectedPosition.value = [-1, -1];
     selectedPiece = null;
-    previousSelected.value = [8, 8];
-    previousMoved.value = [8, 8];
+    previousSelected = [8, 8];
+    previousMoved = [8, 8];
     checkStatus.value = false;
     isCastling = false;
     isWhiteTurn = true;
     isWhiteKingMove = false;
     isBlackKingMove = false;
-    isOver.value = false;
+    isGameover.value = false;
     whiteValue.value = 0;
     blackValue.value = 0;
     validMoves.value = [];

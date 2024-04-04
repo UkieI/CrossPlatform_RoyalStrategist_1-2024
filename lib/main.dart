@@ -22,7 +22,7 @@ class MyApp extends StatelessWidget {
       debugShowCheckedModeBanner: false,
       home: const GameScreens(
         isRotated: false,
-        time: 25,
+        time: 600,
       ),
       // home: Scaffold(
       //   body: DragableWidget(),

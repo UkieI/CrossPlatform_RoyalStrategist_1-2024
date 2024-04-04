@@ -55,6 +55,7 @@ class BoardDeadPieces extends StatelessWidget {
                           controller.blackPiecesTaken[index].toString()],
                 );
               }
+              return null;
             });
       }),
     );

@@ -153,62 +153,7 @@ class GameScreens extends StatelessWidget {
       body: Column(
         children: [
           // Move log
-          Padding(
-            padding: const EdgeInsets.all(0),
-            child: SizedBox(
-              height: 40,
-              child: GetX<MoveLogController>(
-                builder: (controller) {
-                  return ListView.builder(
-                    itemCount: controller.moveLogs.length,
-                    scrollDirection: Axis.horizontal,
-                    itemBuilder: (context, index) {
-                      if (index % 2 == 0) {
-                        return Row(
-                          children: [
-                            const SizedBox(width: 10),
-                            Text(
-                              '${index ~/ 2}.',
-                              style: const TextStyle(color: Colors.white),
-                            ),
-                            TextButton(
-                              style: TextButton.styleFrom(
-                                textStyle: const TextStyle(
-                                  color: Colors.white60,
-                                ),
-                                padding: const EdgeInsets.all(0),
-                              ),
-                              onPressed: () {},
-                              child: Text(controller.moveLogs[index],
-                                  style:
-                                      const TextStyle(color: Colors.white54)),
-                            )
-                          ],
-                        );
-                      } else {
-                        return Row(
-                          children: [
-                            TextButton(
-                              style: TextButton.styleFrom(
-                                textStyle: const TextStyle(
-                                  color: Colors.white60,
-                                ),
-                                padding: const EdgeInsets.all(0),
-                              ),
-                              onPressed: () {},
-                              child: Text(controller.moveLogs[index],
-                                  style:
-                                      const TextStyle(color: Colors.white54)),
-                            ),
-                          ],
-                        );
-                      }
-                    },
-                  );
-                },
-              ),
-            ),
-          ),
+          const MoveLogContainer(),
           // Player 1
           PlayerContainer(
             timer: Obx(
@@ -280,6 +225,80 @@ class GameScreens extends StatelessWidget {
             isClock: time != 0,
           ),
         ],
+      ),
+    );
+  }
+}
+
+class MoveLogContainer extends StatelessWidget {
+  const MoveLogContainer({
+    super.key,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return Padding(
+      padding: const EdgeInsets.all(0),
+      child: SizedBox(
+        height: 40,
+        child: GetX<MoveLogController>(
+          builder: (controller) {
+            return ListView.builder(
+              itemCount: controller.moveLogs.length,
+              scrollDirection: Axis.horizontal,
+              itemBuilder: (context, index) {
+                if (index % 2 == 0) {
+                  return Row(
+                    children: [
+                      const SizedBox(width: 10),
+                      Text(
+                        '${index ~/ 2}.',
+                        style: const TextStyle(color: Colors.white),
+                      ),
+                      SizedBox(
+                        width: 45,
+                        child: TextButton(
+                          style: TextButton.styleFrom(
+                            textStyle: const TextStyle(
+                              color: Colors.white60,
+                            ),
+                            padding: const EdgeInsets.all(0),
+                          ),
+                          onPressed: () {},
+                          child: Text(
+                            controller.moveLogs[index],
+                            style: const TextStyle(color: Colors.white54),
+                          ),
+                        ),
+                      )
+                    ],
+                  );
+                } else {
+                  return Row(
+                    children: [
+                      SizedBox(
+                        width: 45,
+                        child: TextButton(
+                          style: TextButton.styleFrom(
+                            textStyle: const TextStyle(
+                              color: Colors.white60,
+                            ),
+                            padding: const EdgeInsets.all(0),
+                          ),
+                          onPressed: () {},
+                          child: Text(
+                            controller.moveLogs[index],
+                            style: const TextStyle(color: Colors.white54),
+                          ),
+                        ),
+                      ),
+                    ],
+                  );
+                }
+              },
+            );
+          },
+        ),
       ),
     );
   }
@@ -357,7 +376,7 @@ class ChessBoard extends StatelessWidget {
                     return PopUpPawnPromotion(
                       isWhiteTurn: controller.isWhiteTurn,
                       onPieceSelected: (chessPiece) {
-                        controller.showPopupPromotion(chessPiece);
+                        controller.pawnPromotion(chessPiece);
                       },
                       colPromotion: controller.previousMoved[1],
                       width: xStart,

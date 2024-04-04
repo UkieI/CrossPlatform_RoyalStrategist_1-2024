@@ -16,8 +16,8 @@ class DeadPieces extends StatelessWidget {
         if (piece != null)
           Image.asset(
             !piece!.isWhite
-                ? 'assets/images/black_${getImagePieces(piece!)}.png'
-                : 'assets/images/white_${getImagePieces(piece!)}.png',
+                ? 'assets/images/black_${getNamePieces(piece!)}.png'
+                : 'assets/images/white_${getNamePieces(piece!)}.png',
           ),
         if (value != 1)
           Positioned(
