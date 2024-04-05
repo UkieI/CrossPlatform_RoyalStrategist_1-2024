@@ -53,7 +53,10 @@ class Square extends StatelessWidget {
           isWhite ? TColors.bgGreenThemeColor : TColors.fgGreenThemeColor;
     }
     return GestureDetector(
-      onTap: onTap,
+      onTap: () {
+        onTap;
+        dragController.endDragging();
+      },
       onPanCancel: onTap,
 
       // onPanStart: (details) => dragController.endDragging(),
@@ -64,7 +67,8 @@ class Square extends StatelessWidget {
           return Stack(
             children: [
               // show hint move
-              if (isValidMove) !isCaptured ? hintDot() : hintCapture(),
+              if (isValidMove)
+                !isCaptured ? hintDot(constraints) : hintCapture(constraints),
 
               dragTargetChessPieces(constraints, dragController),
               // setting for dragable
@@ -92,7 +96,6 @@ class Square extends StatelessWidget {
         dragController.dragTagetPosition = [row, col];
 
         return;
-        // dragController.endDragging();
       },
       onWillAcceptWithDetails: (data) {
         dragController.startDragging();
@@ -101,26 +104,19 @@ class Square extends StatelessWidget {
       builder: (BuildContext context, List<dynamic> accepted,
           List<dynamic> rejected) {
         return Container(
-            decoration: accepted.isNotEmpty ? hlBoxDecoration() : null,
-            child: piece != null
-                ? isWhiteTurn != piece!.isWhite
-                    ? SizedBox(
-                        width: constraints.maxWidth,
-                        height: constraints.maxHeight,
-                        child: Piece(
-                          piece: piece,
-                          constraints: constraints,
-                          isRotated: isRotated,
-                        ),
-                      )
-                    : !dragController.isDragging.value || !isSelected
-                        ? draggableChessPieces(constraints, dragController)
-                        : SizedBox(
-                            width: constraints.maxWidth,
-                            height: constraints.maxHeight)
-                : SizedBox(
-                    width: constraints.maxWidth,
-                    height: constraints.maxHeight));
+          decoration: accepted.isNotEmpty ? hlBoxDecoration() : null,
+          child: piece != null
+              ? isWhiteTurn != piece!.isWhite
+                  ? Piece(
+                      piece: piece,
+                      constraints: constraints,
+                      isRotated: isRotated,
+                    )
+                  : !dragController.isDragging.value || !isSelected
+                      ? draggableChessPieces(constraints, dragController)
+                      : sizeBoxMaxSize(constraints)
+              : sizeBoxMaxSize(constraints),
+        );
       },
     );
   }
@@ -141,10 +137,10 @@ class Square extends StatelessWidget {
       onDragStarted: () => dragController.startDragging(),
       // onDraggableCanceled: (velocity, offset) => dragController.endDragging(),
       onDragCompleted: () {
+        dragController.endDragging();
         onPlacePosition!(dragController.dragTagetPosition[0],
             dragController.dragTagetPosition[1]);
         dragController.dragTagetPosition = [-1, -1];
-        dragController.endDragging();
       },
       onDragEnd: (details) => {},
       childWhenDragging: Container(),
@@ -154,9 +150,12 @@ class Square extends StatelessWidget {
               constraints: constraints,
               isRotated: isRotated,
             )
-          : SizedBox(
-              width: constraints.maxWidth, height: constraints.maxHeight),
+          : sizeBoxMaxSize(constraints),
     );
+  }
+
+  SizedBox sizeBoxMaxSize(BoxConstraints constraints) {
+    return SizedBox(width: constraints.maxWidth, height: constraints.maxHeight);
   }
 
   Widget rowAndColumnName() {
@@ -270,12 +269,12 @@ class Square extends StatelessWidget {
     );
   }
 
-  Center hintCapture() {
-    return const Center(
+  Center hintCapture(BoxConstraints constraints) {
+    return Center(
       child: SizedBox(
-        height: 55,
-        width: 55,
-        child: CircularProgressIndicator(
+        height: constraints.maxHeight * 0.9,
+        width: constraints.maxWidth * 0.9,
+        child: const CircularProgressIndicator(
           color: TColors.hintGreenThemeColors,
           value: 1,
         ),
@@ -283,11 +282,11 @@ class Square extends StatelessWidget {
     );
   }
 
-  Center hintDot() {
+  Center hintDot(BoxConstraints constraints) {
     return Center(
       child: Container(
-        width: 20,
-        height: 20,
+        height: constraints.maxHeight * 0.35,
+        width: constraints.maxWidth * 0.35,
         decoration: const BoxDecoration(
           shape: BoxShape.circle,
           color: TColors.hintGreenThemeColors,

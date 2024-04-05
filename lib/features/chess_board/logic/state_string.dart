@@ -9,8 +9,13 @@ import 'package:chess_flutter_app/features/chess_board/models/rook.dart';
 class StateBoardString {
   String sb = "";
 
-  StateBoardString(bool isWhiteTurn, List<List<ChessPieces?>> board,
-      bool? isCastleKing, String? enPassantMove) {
+  StateBoardString(
+      bool isWhiteTurn,
+      List<List<ChessPieces?>> board,
+      List<bool>? isCastleKing,
+      String? enPassantMove,
+      int noCaptureOrPawnMoves,
+      int fullmove) {
     // Add piece placement data
     addPiecePlacement(board);
     sb += ' ';
@@ -18,14 +23,17 @@ class StateBoardString {
     addCurrentPlayer(isWhiteTurn);
     sb += ' ';
     // Add castling rights
-    addCastlingRights(isWhiteTurn, isCastleKing);
+    addCastlingRights(isCastleKing);
     sb += ' ';
     // Add en passant data
     addEnPassant(enPassantMove);
+    // sb += ' ${noCaptureOrPawnMoves.toString()}';
+    // sb += ' ${fullmove.toString()}';
   }
 
   @override
   String toString() {
+    // print(sb);
     return sb.toString();
   }
 
@@ -75,15 +83,31 @@ class StateBoardString {
     isWhiteTurn ? sb += 'w' : sb += 'b';
   }
 
-  void addCastlingRights(bool isWhiteTurn, bool? isCastleKing) {
-    if (isCastleKing != null) {
-      if (isWhiteTurn) {
-        isCastleKing ? sb += 'K' : sb += 'Q';
-      } else {
-        isCastleKing ? sb += 'k' : sb += 'q';
-      }
-    } else {
+  void addCastlingRights(List<bool>? isCastleKing) {
+    if (isCastleKing == null) {
       sb += '-';
+      return;
+    }
+    if (!(isCastleKing[0] ||
+        isCastleKing[1] ||
+        isCastleKing[2] ||
+        isCastleKing[3])) {
+      sb += '-';
+      return;
+    }
+
+    if (isCastleKing[0]) {
+      sb += 'K';
+    }
+    if (isCastleKing[1]) {
+      sb += 'Q';
+    }
+
+    if (isCastleKing[2]) {
+      sb += 'k';
+    }
+    if (isCastleKing[3]) {
+      sb += 'q';
     }
   }
 

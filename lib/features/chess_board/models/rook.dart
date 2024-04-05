@@ -4,10 +4,7 @@ import 'package:chess_flutter_app/features/chess_board/models/chess_pieces.dart'
 import 'package:chess_flutter_app/utils/helpers/chess_functions.dart';
 
 class Rook extends ChessPieces {
-  Rook({
-    required super.isWhite,
-    super.value = 5,
-  });
+  Rook({required super.isWhite, super.value = 5, super.hasMoved = false});
 
   @override
   String toString() {

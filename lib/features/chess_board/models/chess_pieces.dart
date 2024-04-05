@@ -1,11 +1,13 @@
 abstract class ChessPieces {
   final bool isWhite;
   final int value;
+  bool hasMoved;
   // List<int> currentPosition;
 
   ChessPieces({
     required this.value,
     required this.isWhite,
+    this.hasMoved = false,
     // required this.currentPosition,
   });
   @override

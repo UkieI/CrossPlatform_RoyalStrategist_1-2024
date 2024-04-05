@@ -4,11 +4,9 @@ import 'package:chess_flutter_app/features/chess_board/models/chess_pieces.dart'
 import 'package:chess_flutter_app/utils/helpers/chess_functions.dart';
 
 class Knight extends ChessPieces {
-  Knight({
-    required super.isWhite,
-    super.value = 3,
-    // required super.currentPosition,
-  });
+  Knight({required super.isWhite, super.value = 3, super.hasMoved = false
+      // required super.currentPosition,
+      });
   @override
   String toString() {
     return "knight";

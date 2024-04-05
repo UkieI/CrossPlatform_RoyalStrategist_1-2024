@@ -52,7 +52,7 @@ class ChessBoard extends StatelessWidget {
 
                       return Square(
                         isWhite: isWhite(index),
-                        piece: controller.board[row][col],
+                        piece: controller.gameBoard.board[row][col],
                         onTap: () => controller.pieceSelected(row, col),
                         onPlacePosition: (r, c) =>
                             controller.pieceSelected(r, c),
@@ -80,7 +80,7 @@ class ChessBoard extends StatelessWidget {
                       onPieceSelected: (chessPiece) {
                         controller.pawnPromotion(chessPiece);
                       },
-                      colPromotion: controller.previousMoved[1],
+                      colPromotion: controller.gameBoard.previousMoved[1],
                       width: xStart,
                       isRotated: chessController.isRotation.value,
                     );

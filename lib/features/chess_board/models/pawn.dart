@@ -4,11 +4,9 @@ import 'package:chess_flutter_app/features/chess_board/models/chess_pieces.dart'
 import 'package:chess_flutter_app/utils/helpers/chess_functions.dart';
 
 class Pawn extends ChessPieces {
-  Pawn({
-    required super.isWhite,
-    super.value = 1,
-    // required super.currentPosition,
-  });
+  Pawn({required super.isWhite, super.value = 1, super.hasMoved = false
+      // required super.currentPosition,
+      });
 
   @override
   List<List<int>> move(int row, int col, List<List<ChessPieces?>> board,
