@@ -5,10 +5,10 @@ import 'package:get/get.dart';
 
 class TimerController extends GetxController {
   RxBool isRunning = false.obs;
-  RxDouble timerWhiteTime = (600.0).obs;
-  RxDouble timerBlackTime = (600.0).obs;
-  final timesWhite = '10.00'.obs;
-  final timesBlack = '10.00'.obs;
+  RxDouble timerWhiteTime = (0.0).obs;
+  RxDouble timerBlackTime = (0.0).obs;
+  final timesWhite = '00.00'.obs;
+  final timesBlack = '00.00'.obs;
   Timer? _timerWhite;
   Timer? _timerBlack;
 
