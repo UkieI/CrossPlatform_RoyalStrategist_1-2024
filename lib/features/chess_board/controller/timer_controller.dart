@@ -16,12 +16,12 @@ class TimerController extends GetxController {
     timerWhiteTime.value = time;
     timerBlackTime.value = time;
     int minutes = timerWhiteTime.value ~/ 60;
-    int seconds = (timerWhiteTime.value % 60) as int;
+    int seconds = (timerWhiteTime.value % 60).toInt();
     timesWhite.value =
         "${minutes.toString().padLeft(2, "0")}:${seconds.toString().padLeft(2, "0")}";
 
     minutes = timerBlackTime.value ~/ 60;
-    seconds = (timerBlackTime.value % 60) as int;
+    seconds = (timerBlackTime.value % 60).toInt();
     timesBlack.value =
         "${minutes.toString().padLeft(2, "0")}:${seconds.toString().padLeft(2, "0")}";
 

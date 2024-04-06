@@ -1,9 +1,6 @@
-import 'package:chess_flutter_app/features/chess_board/models/bishop.dart';
 import 'package:chess_flutter_app/features/chess_board/models/chess_pieces.dart';
 import 'package:chess_flutter_app/features/chess_board/models/king.dart';
-import 'package:chess_flutter_app/features/chess_board/models/knight.dart';
 import 'package:chess_flutter_app/features/chess_board/models/pawn.dart';
-import 'package:chess_flutter_app/features/chess_board/models/queen.dart';
 import 'package:chess_flutter_app/features/chess_board/models/rook.dart';
 import 'package:chess_flutter_app/utils/helpers/chess_functions.dart';
 
