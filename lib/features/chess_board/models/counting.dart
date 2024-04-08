@@ -5,12 +5,12 @@ class Counting {
   final Map<String, int> whiteCount = {};
   final Map<String, int> blackCount = {};
   final List<String> pieceType = [
-    'pawn',
-    'rook',
-    'knight',
-    'bishop',
-    'queen',
-    'king'
+    'p', //pawn
+    'r', // rook
+    'n', // knight
+    'b', // bishop
+    'q', // queen
+    'k' // king
   ];
   int totalCount = 0;
 
