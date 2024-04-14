@@ -4,6 +4,7 @@ import 'package:chess_flutter_app/logic/board/board.dart';
 import 'package:chess_flutter_app/logic/board/piece.dart';
 import 'package:chess_flutter_app/logic/helpers/board_helpers.dart';
 import 'package:chess_flutter_app/logic/move_generation/move/move.dart';
+import 'package:chess_flutter_app/logic/move_generation/move/move_stack.dart';
 
 const List<List<int>> ROOK_DIRECTIONS = [
   [-1, 0], //up
@@ -289,4 +290,33 @@ bool isAnyMoveleft(Board board, bool isWhiteKing) {
   }
 
   return true;
+}
+
+String moveLogString(MoveStack ms) {
+  String strFEN = "";
+  if (ms.isCasted) {
+    if (BoardHelper.colIndex(ms.move.end) == 2) {
+      return "O-O-O";
+    }
+    if (BoardHelper.colIndex(ms.move.end) == 6) {
+      return "O-O";
+    }
+  }
+  if (ms.isPromotion) {
+    return strFEN +=
+        "${BoardHelper.squareNameFromSquare(ms.move.end)}=${Piece.getSymbol(ms.promotionType)}${ms.isInCheck ? "+" : ""}";
+  }
+  strFEN += Piece.getSymbolMoveLog(ms.movedPiece);
+  if (ms.takenPiece != Piece.None || ms.enPassantPiece != Piece.None) {
+    strFEN += "x";
+  }
+
+  strFEN += BoardHelper.squareNameFromSquare(ms.move.end);
+  if (ms.isAnyMoveLeft && ms.isInCheck) {
+    return strFEN += "#";
+  }
+  if (ms.isInCheck) {
+    strFEN += "+";
+  }
+  return strFEN;
 }

@@ -12,6 +12,7 @@ class MoveStack {
   bool isPromotion = false;
   int promotionType = Piece.None;
   bool isEnPassant = false;
+  bool isAnyMoveLeft = false;
 
   MoveStack(this.move, this.movedPiece, this.takenPiece, this.enPassantPiece,
       this.enPassantPos);

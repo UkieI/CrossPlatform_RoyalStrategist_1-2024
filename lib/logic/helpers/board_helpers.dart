@@ -53,7 +53,10 @@ class BoardHelper {
       lightSquareRowCol(rowIndex(squareIndex), colIndex(squareIndex));
 
   static String squareNameFromRowCol(int fileIndex, int rankIndex) =>
-      "${colName[fileIndex]} ${rankIndex + 1}";
+      "${colName[fileIndex]}${rankIndex + 1}";
+
+  static String squareNameFromSquare(int squareIndex) =>
+      squareNameFromRowCol(colIndex(squareIndex), rowIndex(squareIndex));
 
   static bool isValidRowCol(int row, int col) =>
       row >= 0 && row < 8 && col >= 0 && col < 8;

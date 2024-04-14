@@ -23,6 +23,16 @@ class ChessBoardController extends GetxController {
 
   Board board = Board();
 
+  // Rule to write the move for long-term storing
+  // 1. The piece moving (1 letter : P , R , N , B , Q , K )
+  // 2. Start positon (2 num: 0 1 2 3 4 5 6 7) like 00 is a1
+  // 3. End positon (2 num: 0 1 2 3 4 5 6 7)  like 00 is a1
+  // 4. Piece being captured (1 letter : _ , P , R , N , B , Q , K )
+  // 5. Piece promotion (1 letter : _ , P , R , N , B , Q , K )
+  // 6. Is in check (1 num: t : 1 , f  : 0)
+  // 7. Game set (1 letter: 1 - 0 : 1 , 1/2 - 1/2 : 1 )
+  RxList<String> moveLogs = <String>[].obs;
+
   bool isWhiteTurn = true;
   bool isGameOver = false;
   bool isHasTimer = false;
@@ -98,9 +108,11 @@ class ChessBoardController extends GetxController {
             push(board, Move(selectedPos, indexSquare), isPlayerMoved: true);
         updateBoard(selectedPos, indexSquare);
         isInCheck.value = ms.isInCheck;
-        gamePopUp();
+        gamePopUp(ms);
+        moveLogs.add(moveLogString(ms));
       }
       isEnableUndo.value = true;
+
       board.redoStack.clear();
     }
   }
@@ -119,9 +131,10 @@ class ChessBoardController extends GetxController {
 
   void undoMove() {
     if (board.movedStack.isNotEmpty) {
+      gameTimerManagement();
       var msRedo = pop(board);
       board.redoStack.add(msRedo);
-
+      moveLogs.removeLast();
       updateBoard(msRedo.move.start, msRedo.move.end);
       if (board.movedStack.isEmpty) {
         isEnableUndo.value = false;
@@ -136,8 +149,10 @@ class ChessBoardController extends GetxController {
 
   void redoMove() {
     if (board.redoStack.isNotEmpty) {
+      gameTimerManagement();
       var ms = board.redoStack.removeLast();
       pushMS(board, ms);
+      moveLogs.add(moveLogString(ms));
       isInCheck.value = ms.isInCheck;
       updateBoard(ms.move.start, ms.move.end);
       if (board.redoStack.isEmpty) {
@@ -153,8 +168,8 @@ class ChessBoardController extends GetxController {
   }
 
   //Pop up game state
-  bool gamePopUp() {
-    if (isAnyMoveleft(board, isWhiteTurn)) {
+  bool gamePopUp(MoveStack ms) {
+    if (ms.isAnyMoveLeft) {
       if (isInCheck.value) {
         isGameOver = true;
         popUpCheckmate();
@@ -262,7 +277,8 @@ class ChessBoardController extends GetxController {
           promotionType: piece, isPlayerMoved: true);
       // board.square[previousMove!.end] = piece;
       isInCheck.value = ms.isInCheck;
-      gamePopUp();
+      gamePopUp(ms);
+      moveLogs.add(moveLogString(ms));
       update();
     }
   }

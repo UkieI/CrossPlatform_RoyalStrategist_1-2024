@@ -73,6 +73,29 @@ class Piece {
     return symbol;
   }
 
+  static String getSymbolMoveLog(int piece) {
+    int type = pieceType(piece);
+    var symbol = (() {
+      switch (type) {
+        case Rook:
+          return 'R';
+        case Knight:
+          return 'N';
+        case Bishop:
+          return 'B';
+        case Queen:
+          return 'Q';
+        case King:
+          return 'K';
+        case Pawn:
+          return '';
+        default:
+          return '';
+      }
+    })();
+    return symbol;
+  }
+
   int getPieceTypeFromSymbol(String symbol) {
     symbol = symbol.toUpperCase();
     switch (symbol) {

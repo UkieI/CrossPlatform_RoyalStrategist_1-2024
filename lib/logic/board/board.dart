@@ -47,7 +47,7 @@ MoveStack push(Board board, Move move,
   } else {
     // make Move
     makeMove(board, ms, isPlayerMove: isPlayerMoved);
-    if (Piece.pieceType(ms.movedPiece) == Piece.Pawn && isPlayerMoved) {
+    if (isPlayerMoved && Piece.pieceType(ms.movedPiece) == Piece.Pawn) {
       // promotion
       if (isPromotion(ms.movedPiece, ms.move.end)) {
         ms.promotionType = promotionType;
@@ -60,9 +60,13 @@ MoveStack push(Board board, Move move,
       }
       board.noCaptureOrPawnMoves = 0;
     } // can taken enPassant
-    if (isKingInCheck(board, !Piece.isWhite(board.square[ms.move.end])) &&
-        isPlayerMoved) {
+    if (isPlayerMoved &&
+        isKingInCheck(board, !Piece.isWhite(board.square[ms.move.end]))) {
       ms.isInCheck = true;
+    }
+    if (isPlayerMoved &&
+        isAnyMoveleft(board, Piece.isWhite(board.square[ms.move.end]))) {
+      ms.isAnyMoveLeft = true;
     }
     // board.enPassantPos = ms.enPassantPos;
   }
