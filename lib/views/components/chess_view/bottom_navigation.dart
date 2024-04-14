@@ -39,14 +39,16 @@ class BottomNavigationGameScreen extends StatelessWidget {
         ButtonNavigation(
           icon: const Icon(Iconsax.arrow_left_2, color: Colors.white54),
           text: const Text('Back', style: TextStyle(color: Colors.white54)),
-          onPressed: () => chessController.undoMove(),
+          onPressed: () => chessController.isEnableUndo.value
+              ? chessController.undoMove()
+              : false,
         ),
         ButtonNavigation(
           icon: const Icon(Iconsax.arrow_right_3, color: Colors.white54),
           text: const Text('Foward', style: TextStyle(color: Colors.white54)),
-          onPressed: () {
-            chessController.redoMove();
-          },
+          onPressed: () => chessController.isEnableRedo.value
+              ? chessController.redoMove()
+              : false,
         ),
       ],
     );

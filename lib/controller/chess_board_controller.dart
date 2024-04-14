@@ -3,6 +3,7 @@ import 'package:chess_flutter_app/logic/board/board.dart';
 import 'package:chess_flutter_app/logic/board/piece.dart';
 import 'package:chess_flutter_app/logic/helpers/board_helpers.dart';
 import 'package:chess_flutter_app/logic/move_generation/move/move.dart';
+import 'package:chess_flutter_app/logic/move_generation/move/move_stack.dart';
 
 import 'package:chess_flutter_app/logic/move_generation/move_generation.dart';
 import 'package:flutter/material.dart';
@@ -36,6 +37,8 @@ class ChessBoardController extends GetxController {
 
   RxBool promotion = false.obs;
   RxBool isInCheck = false.obs;
+  RxBool isEnableRedo = false.obs;
+  RxBool isEnableUndo = false.obs;
 
   Move? previousMove;
 
@@ -97,7 +100,7 @@ class ChessBoardController extends GetxController {
         isInCheck.value = ms.isInCheck;
         gamePopUp();
       }
-
+      isEnableUndo.value = true;
       board.redoStack.clear();
     }
   }
@@ -106,12 +109,10 @@ class ChessBoardController extends GetxController {
     if (isHasTimer) {
       if (isWhiteTurn) {
         timerController.stopWhiteTimer();
-        timerController.startBlackTimer(
-            timerController.timerBlackTime.value, _context, isGameOver);
+        timerController.startBlackTimer(_context, isGameOver);
       } else {
         timerController.stopBlackTimer();
-        timerController.startWhiteTimer(
-            timerController.timerWhiteTime.value, _context, isGameOver);
+        timerController.startWhiteTimer(_context, isGameOver);
       }
     }
   }
@@ -120,10 +121,16 @@ class ChessBoardController extends GetxController {
     if (board.movedStack.isNotEmpty) {
       var msRedo = pop(board);
       board.redoStack.add(msRedo);
-      var msLast = board.movedStack.last;
-      isInCheck.value = msLast.isInCheck;
 
       updateBoard(msRedo.move.start, msRedo.move.end);
+      if (board.movedStack.isEmpty) {
+        isEnableUndo.value = false;
+        isInCheck.value = false;
+        previousMove = null;
+      } else {
+        isInCheck.value = board.movedStack.last.isInCheck;
+        isEnableRedo.value = true;
+      }
     }
   }
 
@@ -133,6 +140,11 @@ class ChessBoardController extends GetxController {
       pushMS(board, ms);
       isInCheck.value = ms.isInCheck;
       updateBoard(ms.move.start, ms.move.end);
+      if (board.redoStack.isEmpty) {
+        isEnableRedo.value = false;
+      } else {
+        isEnableUndo.value = true;
+      }
     }
   }
 
@@ -226,9 +238,10 @@ class ChessBoardController extends GetxController {
     selectedPieces = Piece.None;
     selectedPos = -1;
     isWhiteTurn = true;
+    isInCheck.value = false;
     board.whitePieces.clear();
     board.blackPieces.clear();
-
+    board.enPassantPos = -1;
     board.initBoard();
 
     if (isHasTimer) {
