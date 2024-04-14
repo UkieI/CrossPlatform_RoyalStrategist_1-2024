@@ -1,9 +1,6 @@
-import 'package:chess_flutter_app/common/widgets/piece/select_pieces.dart';
-import 'package:chess_flutter_app/common/widgets/piece/pieces.dart';
-
-import 'package:chess_flutter_app/features/chess_board/models/chess_pieces.dart';
+import 'package:chess_flutter_app/logic/board/piece.dart';
 import 'package:chess_flutter_app/utils/constants/colors.dart';
-
+import 'package:chess_flutter_app/common/widgets/piece/image_chess_piece.dart';
 import 'package:flutter/material.dart';
 
 import 'package:get/get.dart';
@@ -12,42 +9,37 @@ class Square extends StatelessWidget {
   const Square({
     super.key,
     required this.isWhite,
-    this.onTap,
-    this.piece,
-    required this.isSelected,
-    required this.isValidMove,
+    required this.piece,
+    required this.indexSquare,
+    required this.isWhiteTurn,
+    required this.isKingIncheck,
     required this.previousMoved,
     required this.isCaptured,
-    required this.isWhiteTurn,
-    this.position,
+    required this.isSelected,
+    required this.isValidMove,
+    this.onTap,
     this.onPlacePosition,
-    required this.isRotated,
   });
+
   final bool isWhite;
+  final int piece;
+  final int indexSquare;
+  final bool isKingIncheck;
+  final bool previousMoved;
+  final bool isWhiteTurn;
+  final bool isCaptured;
   final bool isSelected;
   final bool isValidMove;
-  final bool previousMoved;
-  final bool isCaptured;
-  final bool isWhiteTurn;
-  final int? position;
-  final bool isRotated;
-  final ChessPieces? piece;
   final void Function()? onTap;
-  final void Function(int row, int col)? onPlacePosition;
-
-  BoxDecoration hlBoxDecoration() {
-    return BoxDecoration(
-      border: Border.all(width: 3, color: TColors.dragTargetColors),
-    );
-  }
-
+  final void Function(int indexSquare)? onPlacePosition;
   @override
   Widget build(BuildContext context) {
     final dragController = Get.put(DragController());
     Color? squareColor;
-    // The currently selected piece on the chess board
     if (isSelected || previousMoved) {
       squareColor = TColors.highLightThemeColors;
+    } else if (isKingIncheck) {
+      squareColor = Colors.red;
     } else {
       squareColor =
           isWhite ? TColors.bgGreenThemeColor : TColors.fgGreenThemeColor;
@@ -58,44 +50,24 @@ class Square extends StatelessWidget {
         dragController.endDragging();
       },
       onPanCancel: onTap,
-
-      // onPanStart: (details) => dragController.endDragging(),
       child: Container(
         color: squareColor,
-        child: LayoutBuilder(
-            builder: (BuildContext context, BoxConstraints constraints) {
-          return Stack(
-            children: [
-              // show hint move
-              if (isValidMove)
-                !isCaptured ? hintDot(constraints) : hintCapture(constraints),
-
-              dragTargetChessPieces(constraints, dragController),
-              // setting for dragable
-              // if (piece != null && isWhiteTurn == piece!.isWhite)
-              // draggableChessPieces(constraints),
-
-              if (!isRotated) rowAndColumnName(),
-              if (!isRotated && position == 56) columnNamePositon('a'),
-              if (isRotated) rowAndColumnName(),
-              if (isRotated && position == 7) columnNamePositon('8'),
-            ],
-          );
+        child: LayoutBuilder(builder: (context, constraints) {
+          return Stack(children: [
+            if (isValidMove)
+              !isCaptured ? hintDot(constraints) : hintCapture(constraints),
+            dragTargetChessPieces(constraints, dragController),
+          ]);
         }),
       ),
     );
   }
 
-// DragController dragController,
   DragTarget<Object> dragTargetChessPieces(
       BoxConstraints constraints, DragController dragController) {
     return DragTarget(
       onAcceptWithDetails: (details) {
-        int row = position! ~/ 8;
-        int col = position! % 8;
-        dragController.dragTagetPosition = [row, col];
-
-        return;
+        onPlacePosition!(indexSquare);
       },
       onWillAcceptWithDetails: (data) {
         dragController.startDragging();
@@ -104,21 +76,23 @@ class Square extends StatelessWidget {
       builder: (BuildContext context, List<dynamic> accepted,
           List<dynamic> rejected) {
         return Container(
-          decoration: accepted.isNotEmpty ? hlBoxDecoration() : null,
-          child: piece != null
-              ? isWhiteTurn != piece!.isWhite
-                  ? Piece(
-                      piece: piece,
-                      constraints: constraints,
-                      isRotated: isRotated,
-                    )
-                  : !dragController.isDragging.value || !isSelected
-                      ? draggableChessPieces(constraints, dragController)
-                      : sizeBoxMaxSize(constraints)
-              : sizeBoxMaxSize(constraints),
-        );
+            decoration:
+                accepted.isNotEmpty ? hlBoxDecoration(constraints) : null,
+            child: piece != Piece.None
+                ? isWhiteTurn != Piece.isWhite(piece)
+                    ? ImageChessPieceWidget(piece, constraints)
+                    : !dragController.isDragging.value || !isSelected
+                        ? draggableChessPieces(constraints, dragController)
+                        : SizedBox(
+                            width: constraints.maxWidth,
+                            height: constraints.maxHeight)
+                : sizeBoxMax(constraints));
       },
     );
+  }
+
+  SizedBox sizeBoxMax(BoxConstraints constraints) {
+    return SizedBox(width: constraints.maxWidth, height: constraints.maxHeight);
   }
 
   Widget draggableChessPieces(
@@ -126,150 +100,29 @@ class Square extends StatelessWidget {
     DragController dragController,
   ) {
     return Draggable(
-      data: position,
-      feedback: SizedBox(
-        width: constraints.maxWidth,
-        height: constraints.maxHeight,
-        child: SelectPieces(
-          piece: piece!,
+        data: indexSquare,
+        feedback: SizedBox(
+          width: constraints.maxWidth,
+          height: constraints.maxHeight,
+          child: ImageChessPieceWidget(piece, constraints),
         ),
-      ),
-      onDragStarted: () => dragController.startDragging(),
-      // onDraggableCanceled: (velocity, offset) => dragController.endDragging(),
-      onDragCompleted: () {
-        dragController.endDragging();
-        onPlacePosition!(dragController.dragTagetPosition[0],
-            dragController.dragTagetPosition[1]);
-        dragController.dragTagetPosition = [-1, -1];
-      },
-      onDragEnd: (details) => {},
-      childWhenDragging: Container(),
-      child: isWhiteTurn == piece!.isWhite
-          ? Piece(
-              piece: piece,
-              constraints: constraints,
-              isRotated: isRotated,
-            )
-          : sizeBoxMaxSize(constraints),
+        onDragStarted: () => dragController.startDragging(),
+        onDragCompleted: () => dragController.endDragging(),
+        childWhenDragging: Container(),
+        child: ImageChessPieceWidget(piece, constraints));
+  }
+
+  BoxDecoration hlBoxDecoration(
+    BoxConstraints constraints,
+  ) {
+    return BoxDecoration(
+      border: Border.all(width: 3, color: TColors.dragTargetColors),
     );
   }
 
-  SizedBox sizeBoxMaxSize(BoxConstraints constraints) {
-    return SizedBox(width: constraints.maxWidth, height: constraints.maxHeight);
-  }
-
-  Widget rowAndColumnName() {
-    if (!isRotated) {
-      switch (position) {
-        case 0:
-          return rowNamePositon(8.toString());
-        case 8:
-          return rowNamePositon(7.toString());
-        case 16:
-          return rowNamePositon(6.toString());
-        case 24:
-          return rowNamePositon(5.toString());
-        case 32:
-          return rowNamePositon(4.toString());
-        case 40:
-          return rowNamePositon(3.toString());
-        case 48:
-          return rowNamePositon(2.toString());
-        case 56:
-          return rowNamePositon(1.toString());
-        case 57:
-          return columnNamePositon('b');
-        case 58:
-          return columnNamePositon('c');
-        case 59:
-          return columnNamePositon('d');
-        case 60:
-          return columnNamePositon('e');
-        case 61:
-          return columnNamePositon('f');
-        case 62:
-          return columnNamePositon('g');
-        case 63:
-          return columnNamePositon('h');
-      }
-    } else {
-      switch (position) {
-        case 0:
-          return rowNamePositon('a');
-        case 1:
-          return rowNamePositon('b');
-        case 2:
-          return rowNamePositon('c');
-        case 3:
-          return rowNamePositon('d');
-        case 4:
-          return rowNamePositon('e');
-        case 5:
-          return rowNamePositon('f');
-        case 6:
-          return rowNamePositon('g');
-        case 7:
-          return rowNamePositon('h');
-        case 15:
-          return columnNamePositon(7.toString());
-        case 23:
-          return columnNamePositon(6.toString());
-        case 31:
-          return columnNamePositon(5.toString());
-        case 39:
-          return columnNamePositon(4.toString());
-        case 47:
-          return columnNamePositon(3.toString());
-        case 55:
-          return columnNamePositon(2.toString());
-        case 63:
-          return columnNamePositon(1.toString());
-      }
-    }
-    return const SizedBox.shrink();
-  }
-
-  Widget rowNamePositon(String text) {
-    return Positioned(
-      top: 1,
-      left: 2,
-      child: RotatedBox(
-        quarterTurns: isRotated ? 2 : 0,
-        child: Text(
-          text,
-          style: TextStyle(
-            fontSize: 11,
-            fontWeight: FontWeight.w900,
-            color: !isWhite
-                ? TColors.bgGreenThemeColor
-                : TColors.fgGreenThemeColor,
-          ),
-        ),
-      ),
-    );
-  }
-
-  Widget columnNamePositon(String text) {
-    return Positioned(
-      bottom: 1,
-      right: 3,
-      child: RotatedBox(
-        quarterTurns: isRotated ? 2 : 0,
-        child: Text(
-          text,
-          style: TextStyle(
-            fontSize: 11,
-            fontWeight: FontWeight.w900,
-            color: !isWhite
-                ? TColors.bgGreenThemeColor
-                : TColors.fgGreenThemeColor,
-          ),
-        ),
-      ),
-    );
-  }
-
-  Center hintCapture(BoxConstraints constraints) {
+  Center hintCapture(
+    BoxConstraints constraints,
+  ) {
     return Center(
       child: SizedBox(
         height: constraints.maxHeight * 0.9,
@@ -282,11 +135,13 @@ class Square extends StatelessWidget {
     );
   }
 
-  Center hintDot(BoxConstraints constraints) {
+  Center hintDot(
+    BoxConstraints constraints,
+  ) {
     return Center(
       child: Container(
-        height: constraints.maxHeight * 0.35,
         width: constraints.maxWidth * 0.35,
+        height: constraints.maxHeight * 0.35,
         decoration: const BoxDecoration(
           shape: BoxShape.circle,
           color: TColors.hintGreenThemeColors,
@@ -296,14 +151,9 @@ class Square extends StatelessWidget {
   }
 }
 
-// class DragController extends GetxController {
-
-// }
-
 class DragController extends GetxController {
   var isDragging = false.obs;
-  RxBool isRelease = false.obs;
-  List<int> dragTagetPosition = [-1, -1];
+
   void startDragging() {
     isDragging.value = true;
   }

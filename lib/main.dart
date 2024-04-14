@@ -1,6 +1,3 @@
-import 'package:chess_flutter_app/features/chess_board/views/game_board/game_screen.dart';
-import 'package:chess_flutter_app/utils/constants/text_strings.dart';
-import 'package:chess_flutter_app/utils/theme/theme.dart';
 import 'package:chess_flutter_app/views/chess_view.dart';
 
 import 'package:flutter/material.dart';
@@ -15,13 +12,15 @@ class MyApp extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return GetMaterialApp(
-      title: TTexts.appName,
-      themeMode: ThemeMode.system,
-      theme: TAppTheme.lightTheme,
-      darkTheme: TAppTheme.darkTheme,
+    return const GetMaterialApp(
+      // title: TTexts.appName,
+      // themeMode: ThemeMode.system,
+      // theme: TAppTheme.lightTheme,
+      // darkTheme: TAppTheme.darkTheme,
       debugShowCheckedModeBanner: false,
-      home: const ChessView(),
+      home: ChessView(
+        setTimer: 600,
+      ),
     );
   }
 }

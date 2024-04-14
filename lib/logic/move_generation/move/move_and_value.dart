@@ -1,4 +1,4 @@
-import 'package:chess_flutter_app/features/chess_board/models/move.dart';
+import 'package:chess_flutter_app/logic/move_generation/move/move.dart';
 
 class MoveAndValue {
   Move move;

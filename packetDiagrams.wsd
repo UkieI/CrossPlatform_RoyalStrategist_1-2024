@@ -1,0 +1,157 @@
+@startuml
+
+left to right direction
+package "Model" as PK1{
+    class AppTheme     
+    class Move {
+        + from : int
+        + to : int
+    }
+    class MoveAndValue {
+        + move : Move
+        + value : int
+    }
+    class MoveStack {
+        + move : Move
+        + movedPiece : ChessPiece?
+        + takenPiece : ChessPiece?
+        + enPassantPiece : ChessPiece?
+        + isCastled : bool = false
+        + promotion : bool = false
+        + ennPassant : bool = false 
+        + promotionType : PieceType
+        + MoveStack()
+    }
+        
+}
+
+package "Controller" {
+    class ChessController {
+        + board : ChessBoard
+        + isWhiteTurn : bool
+        + selectedPiece : ChessPiece
+        + whitePiecesTaken : RxMap
+        + blackPiecesTaken : RxMap
+        + isGameOVer : bool
+        + isPromotion : Rxbool
+        + moveListLog : List<Move> 
+
+        + timer : Timer?
+        + moveList : List<Move>
+        + validMoves : List<int>
+
+        + gamePopUp() : void
+        + popUpDialog(String title, String body) : void
+
+        + resetGame() : void
+    }
+}
+
+package "Presentation" as PK2{
+    class ChessView
+    class MainMenuView
+    class SettingView
+}
+
+package "Logic" as PK3{
+    class ChessBoard {
+        + square : List<ChessPiece?> = List.filled(64, null)
+        + whitePieces : List<ChessPiece>
+        + blackPieces : List<ChessPiece>
+        + moveCount : int
+        + isInCheckOrDraw : bool
+
+        + initBoard() : void
+        
+        ' Game States fuctions
+        {static} + insufficientMaterial(ChessBoard board) : bool
+        {static} + fiftyMoveRule() : bool
+        {static} + threeFoldReceptions() : bool
+
+        {static} + elavulateBoard(ChessBoard board) : int 
+        {static} + makeMove(ChessBoard board, MoveStack ms) : void
+        {static} + undoMove(ChessBoard board, MoveStack ms) : void
+        {static} + setSquare(ChessBoard board, int squareIndex, ChessPiece piece) : void
+        {static} + addPiece(ChessBoard board) : void
+        {static} + loadPieceFromfen(String fen) : void 
+        {static} + removePiece(ChessBoard board, ChessPiece piece) : void
+        {static} + castle(ChessBoard board, MoveStack ms) : void
+        {static} + undoCastle(ChessBoard board, MoveStack ms) : void
+        {static} + promote(ChessBoard board, MoveStack ms) : void
+        {static} + undoPromote(ChessBoard board, MoveStack ms) : void
+        {static} + addPromotedPiece(ChessBoard board, MoveStack ms) : void
+        {static} + checkEnPassant(Chess board, MoveStack) : void
+        
+        {static} + isCastled() : bool
+        {static} + isPromotion(ChessPiece piece) : bool
+        {static} + canTakeEnPassant(ChessPiece piece) : bool
+        
+    }
+    class ChessPiece {
+        + type : PieceType
+        + isWhite : bool
+        ' + position : int
+        + moveCount : int = 0
+        + value : int 
+    }
+
+    class ChessPiece {
+        {static} + none : int = 0
+        {static} + pawn : int = 1
+        {static} + knight : int = 2
+        {static} + bishop : int = 3
+        {static} + rook : int = 4
+        {static} + Queen : int = 5
+        {static} + King : int = 6
+
+        {static} + King : int = 0
+        {static} + King : int = 8
+
+        ' White piece
+        ' Black Piece
+        - typeMask : int = 7
+        - colorMask : int = 8
+
+    }
+    enum PieceType {
+        pawn
+        rook
+        knight
+        bishop
+        queen
+        king
+    }
+    package "Move Calculation" {
+
+        class AICaculationMove {
+            {static} + calculateAIMove(ChessBoard board, bool isWhitePlayer, int depth, int apha, int beta) : Move
+            {static} + aphaBeta(ChessBoard board, bool player, int depth, int apha , int beta ) : MoveAndValue
+        }
+        class MoveCalculation {
+            {static} + getAllMove(ChessBoard board, int depth, bool player) : List<Move>
+            {static} + pawnMoves(ChessBoard board, ChessPiece pawn) : List<int> 
+            {static} + pawnDiagonalAttacks(ChessPiece pawn, ChessBoard board) : List<int> 
+            ' all moves
+        }
+    }
+}
+
+package "Utils" as PK4{
+    package "constants" {
+       class AColors
+       class AImages
+       class ASizes 
+       class ATexts
+    }
+}
+
+
+
+PK1 -> PK2
+PK1 ----> PK3
+PK3 --> PK1
+' UI --> Controller
+' Controller --> Service
+' Service --> Repository
+
+@enduml

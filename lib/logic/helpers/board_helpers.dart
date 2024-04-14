@@ -1,19 +1,21 @@
-import 'package:chess_flutter_app/logic/board/coord.dart';
+import 'package:chess_flutter_app/logic/board/board.dart';
+import 'package:chess_flutter_app/logic/board/piece.dart';
+import 'package:chess_flutter_app/utils/helpers/chess_functions.dart';
 
 class BoardHelper {
-  static var rookDirections = [
-    Coord(-1, 0),
-    Coord(1, 0),
-    Coord(0, 1),
-    Coord(0, -1)
-  ];
+  // static var rookDirections = [
+  //   Coord(-1, 0),
+  //   Coord(1, 0),
+  //   Coord(0, 1),
+  //   Coord(0, -1)
+  // ];
 
-  static var bishopDirections = [
-    Coord(-1, 1),
-    Coord(1, 1),
-    Coord(1, -1),
-    Coord(-1, -1)
-  ];
+  // static var bishopDirections = [
+  //   Coord(-1, 1),
+  //   Coord(1, 1),
+  //   Coord(1, -1),
+  //   Coord(-1, -1)
+  // ];
 
   static String rowName = "12345678";
   static String colName = "abcdefgh";
@@ -36,14 +38,15 @@ class BoardHelper {
   static const g8 = 62;
   static const h8 = 63;
 
+  static bool isInBoard(int squareIndex) =>
+      squareIndex >= 0 && squareIndex < 64;
+
+  static bool sameSquareColor(int squareIndex) =>
+      (rowIndex(squareIndex) + colIndex(squareIndex)) % 2 == 0;
+
   static int rowIndex(int squareIndex) => squareIndex >> 3;
   static int colIndex(int squareIndex) => squareIndex & 7; // 0b000111
   static int indexFromRowCol(int row, int col) => row * 8 + col;
-  static int indexFromCoord(Coord coord) =>
-      indexFromRowCol(coord.row, coord.col);
-
-  static Coord coordFromIndex(int squareIndex) =>
-      Coord(rowIndex(squareIndex), colIndex(squareIndex));
   static bool lightSquareRowCol(int rowIndex, int colIndex) =>
       (rowIndex + colIndex) % 2 != 0;
   static bool lightSquareSquare(int squareIndex) =>
@@ -52,15 +55,35 @@ class BoardHelper {
   static String squareNameFromRowCol(int fileIndex, int rankIndex) =>
       "${colName[fileIndex]} ${rankIndex + 1}";
 
-  static String squareNameFromIndex(int squareIndex) {
-    var coord = coordFromIndex(squareIndex);
-    return squareNameFromRowCol(coord.row, coord.col);
-  }
+  static bool isValidRowCol(int row, int col) =>
+      row >= 0 && row < 8 && col >= 0 && col < 8;
 
-  static String squareNameFromCoord(Coord coord) {
-    return squareNameFromRowCol(coord.row, coord.col);
-  }
+  static void loadPieceFromfen(Board board, String fen) {
+    board.square = List.filled(64, 0);
+    List<String> listFenBoard = fen.split(' ');
+    String fenBoard = listFenBoard[0];
+    int row = 0, col = 0;
 
-  static bool isValidCoordinate(int x, int y) =>
-      x >= 0 && x < 8 && y >= 0 && y < 8;
+    for (var rune in fenBoard.runes) {
+      String char = String.fromCharCode(rune);
+      if (char == '/') {
+        row++;
+        col = 0;
+      } else {
+        if (isDigit(char)) {
+          col += int.parse(char);
+        } else {
+          int piece = Piece.getPieceFromSymbol(char);
+          if (Piece.pieceType(piece) == Piece.King) {
+            Piece.isWhite(piece)
+                ? board.kingPositions[0] = indexFromRowCol(row, col)
+                : board.kingPositions[1] = indexFromRowCol(row, col);
+          }
+          board.square[indexFromRowCol(row, col)] = piece;
+          addPiece(board, piece);
+          col++;
+        }
+      }
+    }
+  }
 }

@@ -30,13 +30,13 @@ class TimerController extends GetxController {
   }
 
   // Khởi động đồng hồ đếm ngược
-  void startWhiteTimer(double seconds, BuildContext context, RxBool isOver) {
+  void startWhiteTimer(double seconds, BuildContext context, bool isOver) {
     _timerWhite = Timer.periodic(const Duration(milliseconds: 100), (timer) {
       if (isZero(timerWhiteTime.value)) {
         _timerBlack?.cancel();
         _timerWhite?.cancel();
         showDiaLog(context, false);
-        isOver.value = true;
+        isOver = true;
         return;
       }
 
@@ -60,13 +60,13 @@ class TimerController extends GetxController {
   }
 
   // Khởi động đồng hồ đếm ngược
-  void startBlackTimer(double seconds, BuildContext context, RxBool isOver) {
+  void startBlackTimer(double seconds, BuildContext context, bool isOver) {
     _timerBlack = Timer.periodic(const Duration(milliseconds: 100), (timer) {
       if (isZero(timerBlackTime.value)) {
         _timerBlack?.cancel();
         _timerWhite?.cancel();
         showDiaLog(context, true);
-        isOver.value = true;
+        isOver = true;
         return;
       }
 

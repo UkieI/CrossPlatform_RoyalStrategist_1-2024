@@ -1,24 +1,19 @@
-import 'package:chess_flutter_app/features/chess_board/models/chess_pieces.dart';
-import 'package:chess_flutter_app/utils/helpers/chess_functions.dart';
+import 'package:chess_flutter_app/common/widgets/piece/image_seleced.dart';
+import 'package:chess_flutter_app/logic/board/piece.dart';
 
 import 'package:flutter/material.dart';
 
 class DeadPieces extends StatelessWidget {
   const DeadPieces({super.key, required this.piece, required this.value});
 
-  final ChessPieces? piece;
+  final int piece;
   final int value;
 
   @override
   Widget build(BuildContext context) {
     return Stack(
       children: [
-        if (piece != null)
-          Image.asset(
-            !piece!.isWhite
-                ? 'assets/images/black_${getNamePieces(piece!)}.png'
-                : 'assets/images/white_${getNamePieces(piece!)}.png',
-          ),
+        if (piece != Piece.None) SelectPieces(piece: piece),
         if (value != 1)
           Positioned(
               bottom: 0,

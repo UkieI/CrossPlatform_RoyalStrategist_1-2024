@@ -1,4 +1,5 @@
-import 'package:chess_flutter_app/features/chess_board/controller/chess_controller.dart';
+import 'package:chess_flutter_app/controller/chess_board_controller.dart';
+
 import 'package:chess_flutter_app/utils/constants/sizes.dart';
 import 'package:chess_flutter_app/utils/constants/text_strings.dart';
 import 'package:flutter/material.dart';
@@ -24,8 +25,6 @@ class PopUpDialogOptions extends StatelessWidget {
               // Flip Board
               TextButton(
                 onPressed: () {
-                  chessController.isRotation.value =
-                      !chessController.isRotation.value;
                   Navigator.pop(context);
                 },
                 child: Align(

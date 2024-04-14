@@ -1,11 +1,3 @@
-import 'package:chess_flutter_app/features/chess_board/models/bishop.dart';
-import 'package:chess_flutter_app/features/chess_board/models/chess_pieces.dart';
-import 'package:chess_flutter_app/features/chess_board/models/king.dart';
-import 'package:chess_flutter_app/features/chess_board/models/knight.dart';
-import 'package:chess_flutter_app/features/chess_board/models/pawn.dart';
-import 'package:chess_flutter_app/features/chess_board/models/queen.dart';
-import 'package:chess_flutter_app/features/chess_board/models/rook.dart';
-
 class ChessFunctions {}
 
 bool isWhite(int index) {
@@ -27,68 +19,6 @@ bool isInBoard(int row, int col) {
 bool isDigit(String char) {
   final codeUnit = char.codeUnitAt(0);
   return codeUnit >= 48 && codeUnit <= 57;
-}
-
-String getNamePieces(ChessPieces piece) {
-  if (piece is Pawn) return 'pawn';
-  if (piece is Rook) return 'rook';
-  if (piece is Knight) return 'knight';
-  if (piece is Bishop) return 'bishop';
-  if (piece is Queen) return 'queen';
-  if (piece is King) return 'king';
-
-  return '';
-}
-
-ChessPieces? recharPiecePEN(String piece) {
-  switch (piece) {
-    case 'P':
-      return Pawn(isWhite: true);
-    case 'p':
-      return Pawn(isWhite: false);
-    case 'R':
-      return Rook(isWhite: true);
-    case 'r':
-      return Rook(isWhite: false);
-    case 'N':
-      return Knight(isWhite: true);
-    case 'n':
-      return Knight(isWhite: false);
-    case 'B':
-      return Bishop(isWhite: true);
-    case 'b':
-      return Bishop(isWhite: false);
-    case 'Q':
-      return Queen(isWhite: true);
-    case 'q':
-      return Queen(isWhite: false);
-    case 'K':
-      return King(isWhite: true);
-    case 'k':
-      return King(isWhite: false);
-  }
-  return null;
-}
-
-ChessPieces? reConvertPiece(String piece, bool isWhite) {
-  switch (piece) {
-    case "_":
-      return null;
-    case "P":
-      return Pawn(isWhite: isWhite);
-    case "R":
-      return Rook(isWhite: isWhite);
-    case "N":
-      return Knight(isWhite: isWhite);
-    case "B":
-      return Bishop(isWhite: isWhite);
-    case "Q":
-      return Queen(isWhite: isWhite);
-    case "K":
-      return King(isWhite: isWhite);
-  }
-
-  return null;
 }
 
 int reConvertRow(String row) {
@@ -133,17 +63,6 @@ int reConvertCol(String col) {
       return 7;
   }
   return 8;
-}
-
-String convertPiece(ChessPieces piece) {
-  if (piece is Pawn) return "P";
-  if (piece is Rook) return "R";
-  if (piece is Knight) return "N";
-  if (piece is Bishop) return "B";
-  if (piece is Queen) return "Q";
-  if (piece is King) return "K";
-
-  return "_";
 }
 
 String convertCol(int col) {

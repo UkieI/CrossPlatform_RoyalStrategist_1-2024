@@ -1,6 +1,6 @@
-import 'package:chess_flutter_app/features/chess_board/views/game_board/widgets/board_dead_pieces.dart';
 import 'package:chess_flutter_app/utils/constants/colors.dart';
 import 'package:chess_flutter_app/utils/constants/sizes.dart';
+import 'package:chess_flutter_app/views/components/chess_view/board_dead_piece.dart';
 import 'package:flutter/material.dart';
 
 class PlayerContainer extends StatelessWidget {
@@ -44,7 +44,7 @@ class PlayerContainer extends StatelessWidget {
               child: Column(
                 mainAxisAlignment: MainAxisAlignment.center,
                 crossAxisAlignment: CrossAxisAlignment.start,
-                children: [playerName, BoardDeadPieces(isWhite: isWhite)],
+                children: [playerName, BoardDeadPieces(isWhitePlayer: isWhite)],
               ),
             ),
             if (isClock) timer,

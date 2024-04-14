@@ -29,8 +29,13 @@ class Piece {
   static const BlackRook = Rook | Black; // 12
   static const BlackQueen = Queen | Black; // 13
   static const BlackKing = King | Black; // 14
-  static const typeMask = 0x07;
-  static const colourMask = 0x08;
+  static const typeMask = 7;
+  static const colourMask = 8;
+
+  static int makePieceII(int pieceType, int pieceColor) =>
+      pieceType | pieceColor;
+  static int makePieceIB(int pieceType, bool pieceColor) =>
+      makePieceII(pieceType, pieceColor ? White : Black);
 
   static bool isColour(int piece, int colour) =>
       (piece & colourMask) == colour && piece != 0;
@@ -40,4 +45,111 @@ class Piece {
   static int pieceColour(int piece) => piece & colourMask;
 
   static int pieceType(int piece) => piece & typeMask;
+
+  static bool isSameColor(int thisPiece, int thatPiece) =>
+      pieceColour(thisPiece) == pieceColour(thatPiece);
+
+  static String getSymbol(int piece) {
+    int type = pieceType(piece);
+    var symbol = (() {
+      switch (type) {
+        case Rook:
+          return 'R';
+        case Knight:
+          return 'N';
+        case Bishop:
+          return 'B';
+        case Queen:
+          return 'Q';
+        case King:
+          return 'K';
+        case Pawn:
+          return 'P';
+        default:
+          return ' ';
+      }
+    })();
+    symbol = isWhite(piece) ? symbol : symbol.toLowerCase();
+    return symbol;
+  }
+
+  int getPieceTypeFromSymbol(String symbol) {
+    symbol = symbol.toUpperCase();
+    switch (symbol) {
+      case 'R':
+        return Rook;
+      case 'N':
+        return Knight;
+      case 'B':
+        return Bishop;
+      case 'Q':
+        return Queen;
+      case 'K':
+        return King;
+      case 'P':
+        return Pawn;
+      default:
+        return None;
+    }
+  }
+
+  static int getPieceFromSymbol(String symbol) {
+    int pieceType = 0;
+    var symbolUpCase = symbol.toUpperCase();
+    switch (symbolUpCase) {
+      case 'R':
+        pieceType = Rook;
+        break;
+      case 'N':
+        pieceType = Knight;
+        break;
+      case 'B':
+        pieceType = Bishop;
+        break;
+      case 'Q':
+        pieceType = Queen;
+        break;
+      case 'K':
+        pieceType = King;
+        break;
+      case 'P':
+        pieceType = Pawn;
+        break;
+      default:
+        pieceType = None;
+        break;
+    }
+    int piece = makePieceIB(pieceType, symbolUpCase == symbol);
+    return piece;
+  }
+
+  static int pieceValue(int piece) {
+    int value = 0;
+    int type = pieceType(piece);
+
+    switch (type) {
+      case Rook:
+        value = 500;
+        break;
+      case Knight:
+        value = 300;
+        break;
+      case Bishop:
+        value = 300;
+        break;
+      case Queen:
+        value = 900;
+        break;
+      case King:
+        value = 2000;
+        break;
+      case Pawn:
+        value = 100;
+        break;
+      default:
+        value = 0;
+        break;
+    }
+    return isWhite(piece) ? value : -value;
+  }
 }

@@ -1,6 +1,6 @@
-import 'package:chess_flutter_app/features/chess_board/models/chess_pieces.dart';
+import 'package:chess_flutter_app/common/widgets/piece/image_seleced.dart';
 import 'package:chess_flutter_app/utils/constants/colors.dart';
-import 'package:chess_flutter_app/utils/helpers/chess_functions.dart';
+
 import 'package:flutter/material.dart';
 
 class SquarePromotion extends StatelessWidget {
@@ -8,20 +8,12 @@ class SquarePromotion extends StatelessWidget {
     super.key,
     required this.isWhite,
     this.onTap,
-    this.piece,
+    required this.piece,
   });
   final bool isWhite;
 
-  final ChessPieces? piece;
+  final int piece;
   final void Function()? onTap;
-
-  Widget _chessPiecesIcon() {
-    return piece != null
-        ? Image.asset(piece!.isWhite
-            ? 'assets/images/white_${getNamePieces(piece!)}.png'
-            : 'assets/images/black_${getNamePieces(piece!)}.png')
-        : const Center(child: SizedBox());
-  }
 
   @override
   Widget build(BuildContext context) {
@@ -30,7 +22,7 @@ class SquarePromotion extends StatelessWidget {
       onPanCancel: onTap,
       child: Container(
         color: TColors.fgGreenThemeColor,
-        child: _chessPiecesIcon(),
+        child: SelectPieces(piece: piece),
       ),
     );
   }
