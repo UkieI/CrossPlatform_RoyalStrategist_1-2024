@@ -29,7 +29,6 @@ class StateBoardString {
 
   @override
   String toString() {
-    print(sb);
     return sb.toString();
   }
 

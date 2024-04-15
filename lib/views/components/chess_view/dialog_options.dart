@@ -1,5 +1,4 @@
 import 'package:chess_flutter_app/controller/chess_board_controller.dart';
-import 'package:chess_flutter_app/utils/constants/colors.dart';
 
 import 'package:chess_flutter_app/utils/constants/sizes.dart';
 import 'package:chess_flutter_app/utils/constants/text_strings.dart';

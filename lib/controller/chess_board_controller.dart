@@ -65,7 +65,7 @@ class ChessBoardController extends GetxController {
   @override
   void onInit() {
     super.onInit();
-    board.initBoard();
+    isWhiteTurn = board.initBoard();
     if (_time != 0) {
       timerController = Get.put(TimerController());
       timerController.setClock(_time);
@@ -126,6 +126,10 @@ class ChessBoardController extends GetxController {
         gamePopUp(isAnyMoveLeft);
         moveLogs.add(moveLogString(ms, isAnyMoveLeft, isInCheck.value));
         updateStateString(board, !isWhiteTurn, ms);
+        ms.takenPiece != Piece.None ||
+                Piece.pieceType(ms.movedPiece) == Piece.Pawn
+            ? noCaptureOrPawnMoves = 0
+            : noCaptureOrPawnMoves++;
 
         playSound(ms);
       }

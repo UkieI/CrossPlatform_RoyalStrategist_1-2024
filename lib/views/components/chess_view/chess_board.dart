@@ -1,8 +1,6 @@
 import 'package:chess_flutter_app/common/widgets/popup/pop_up_pawn_promotion.dart';
 import 'package:chess_flutter_app/common/widgets/square/square.dart';
 import 'package:chess_flutter_app/controller/chess_board_controller.dart';
-import 'package:chess_flutter_app/logic/board/board.dart';
-import 'package:chess_flutter_app/logic/board/piece.dart';
 import 'package:chess_flutter_app/logic/helpers/board_helpers.dart';
 import 'package:chess_flutter_app/utils/device/device_utility.dart';
 import 'package:chess_flutter_app/utils/helpers/chess_functions.dart';

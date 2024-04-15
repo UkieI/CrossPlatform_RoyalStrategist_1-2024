@@ -19,8 +19,8 @@ class Board {
   List<int> player1Queens = [];
   List<int> player2Queens = [];
   int indexMoveLog = 0;
-  initBoard() {
-    BoardHelper.loadPieceFromfen(this, BoardHelper.TEST_FEN_DRAW);
+  bool initBoard() {
+    return BoardHelper.loadPieceFromfen(this, BoardHelper.TEST_FEN_ENPASSANT);
   }
 }
 

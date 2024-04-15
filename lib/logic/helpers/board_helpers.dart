@@ -11,6 +11,11 @@ class BoardHelper {
   static const TEST_FEN_IM_KBvK = "8/8/8/2k1B3/8/8/2Kp4/8 b - - 0 1";
   static const TEST_FEN_IM_KBvKB = "8/8/8/2k1B3/1b6/8/2Kp4/8 b - - 0 1";
   static const TEST_FEN_DRAW = "8/8/8/2k5/8/8/4q3/K7 b - - 0 1";
+  static const TEST_FEN_CASTLE =
+      "rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR b - - 0 1";
+  static const TEST_FEN_ENPASSANT =
+      "rnbqkbnr/ppp1p1pp/8/3pPp2/8/8/PPPP1PPP/RNBQKBNR w KQkq f3 0 1";
+
   static String rowName = "12345678";
   static String colName = "abcdefgh";
 
@@ -55,7 +60,7 @@ class BoardHelper {
   static bool isValidRowCol(int row, int col) =>
       row >= 0 && row < 8 && col >= 0 && col < 8;
 
-  static void loadPieceFromfen(Board board, String fen) {
+  static bool loadPieceFromfen(Board board, String fen) {
     board.square = List.filled(64, 0);
     List<String> listFenBoard = fen.split(' ');
     String fenBoard = listFenBoard[0];
@@ -78,5 +83,55 @@ class BoardHelper {
         }
       }
     }
+
+    bool kingWhiteMove = false;
+    bool kingBlackMove = false;
+
+    if (!listFenBoard[2].contains("K") && !listFenBoard[2].contains("Q")) {
+      kingWhiteMove = true;
+    }
+    if (!listFenBoard[2].contains("k") && !listFenBoard[2].contains("q")) {
+      kingBlackMove = true;
+    }
+    for (var piece in piecesForPlayer(true, board)) {
+      if (piece.piece == Piece.WhiteKing && kingWhiteMove) {
+        piece.moveCount = 1;
+        break;
+      }
+      if (piece.piece == Piece.WhiteRook &&
+          piece.pos == 56 &&
+          !listFenBoard[2].contains("Q")) {
+        piece.moveCount = 1;
+      }
+      if (piece.piece == Piece.WhiteRook &&
+          piece.pos == 63 &&
+          !listFenBoard[2].contains("K")) {
+        piece.moveCount = 1;
+      }
+    }
+
+    for (var piece in piecesForPlayer(false, board)) {
+      if (piece.piece == Piece.WhiteKing && kingBlackMove) {
+        piece.moveCount = 1;
+        break;
+      }
+      if (piece.piece == Piece.WhiteRook &&
+          piece.pos == 0 &&
+          !listFenBoard[2].contains("q")) {
+        piece.moveCount = 1;
+      }
+      if (piece.piece == Piece.WhiteRook &&
+          piece.pos == 7 &&
+          !listFenBoard[2].contains("k")) {
+        piece.moveCount = 1;
+      }
+    }
+
+    if (!listFenBoard[3].contains('-')) {
+      int col = listFenBoard[3].codeUnitAt(0) - 'a'.codeUnitAt(0);
+      int row = int.parse(listFenBoard[3].substring(1)) - 1;
+      board.enPassantPos = indexFromRowCol(row, col);
+    }
+    return listFenBoard[1].contains('w') ? true : false;
   }
 }
