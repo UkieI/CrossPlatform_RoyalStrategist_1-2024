@@ -1,4 +1,5 @@
 import 'package:chess_flutter_app/controller/chess_board_controller.dart';
+import 'package:chess_flutter_app/utils/constants/colors.dart';
 
 import 'package:chess_flutter_app/utils/constants/sizes.dart';
 import 'package:chess_flutter_app/utils/constants/text_strings.dart';
@@ -30,7 +31,7 @@ class PopUpDialogOptions extends StatelessWidget {
                 child: Align(
                   alignment: Alignment.centerLeft,
                   child: Padding(
-                    padding: const EdgeInsets.all(16.0),
+                    padding: const EdgeInsets.all(8.0),
                     child: Text(
                       TTexts.flipBoard,
                       style: Theme.of(context).textTheme.bodyLarge,
@@ -45,7 +46,7 @@ class PopUpDialogOptions extends StatelessWidget {
                 child: Align(
                   alignment: Alignment.centerLeft,
                   child: Padding(
-                    padding: const EdgeInsets.all(16.0),
+                    padding: const EdgeInsets.all(8.0),
                     child: Text(
                       TTexts.copyAsPNG,
                       style: Theme.of(context).textTheme.bodyLarge,
@@ -63,7 +64,7 @@ class PopUpDialogOptions extends StatelessWidget {
                 child: Align(
                   alignment: Alignment.centerLeft,
                   child: Padding(
-                    padding: const EdgeInsets.all(16.0),
+                    padding: const EdgeInsets.all(8.0),
                     child: Text(
                       TTexts.newGame,
                       style: Theme.of(context).textTheme.bodyLarge,

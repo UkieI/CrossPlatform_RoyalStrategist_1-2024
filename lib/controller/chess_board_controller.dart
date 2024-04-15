@@ -3,7 +3,6 @@ import 'package:chess_flutter_app/logic/board/board.dart';
 import 'package:chess_flutter_app/logic/board/piece.dart';
 import 'package:chess_flutter_app/logic/helpers/board_helpers.dart';
 import 'package:chess_flutter_app/logic/move_generation/move/move.dart';
-import 'package:chess_flutter_app/logic/move_generation/move/move_stack.dart';
 
 import 'package:chess_flutter_app/logic/move_generation/move_generation.dart';
 import 'package:flutter/material.dart';
@@ -37,7 +36,7 @@ class ChessBoardController extends GetxController {
   bool isGameOver = false;
   bool isHasTimer = false;
 
-  int selectedPieces = 0;
+  int selectedPieces = Piece.None;
   int selectedPos = -1;
 
   List<int> validMoves = [];
@@ -77,6 +76,10 @@ class ChessBoardController extends GetxController {
         selectedPieces = board.square[indexSquare];
         selectedPos = indexSquare;
       }
+    } else if (selectedPos == indexSquare) {
+      selectedPieces = Piece.None;
+      selectedPos = -1;
+      return;
     }
     // There is a piece selected, but the user can select another one of there pieces
     else if (board.square[indexSquare] != Piece.None &&
@@ -107,9 +110,10 @@ class ChessBoardController extends GetxController {
         var ms =
             push(board, Move(selectedPos, indexSquare), isPlayerMoved: true);
         updateBoard(selectedPos, indexSquare);
-        isInCheck.value = ms.isInCheck;
-        gamePopUp(ms);
-        moveLogs.add(moveLogString(ms));
+        isInCheck.value = isKingInCheck(board, isWhiteTurn);
+        var isAnyMoveLeft = isAnyMoveleft(board, !isWhiteTurn);
+        gamePopUp(isAnyMoveLeft);
+        moveLogs.add(moveLogString(ms, isAnyMoveLeft, isInCheck.value));
       }
       isEnableUndo.value = true;
 
@@ -152,8 +156,10 @@ class ChessBoardController extends GetxController {
       gameTimerManagement();
       var ms = board.redoStack.removeLast();
       pushMS(board, ms);
-      moveLogs.add(moveLogString(ms));
-      isInCheck.value = ms.isInCheck;
+      var isKingCheck = isKingInCheck(board, !isWhiteTurn);
+      moveLogs.add(
+          moveLogString(ms, isAnyMoveleft(board, !isWhiteTurn), isKingCheck));
+      isInCheck.value = isKingCheck;
       updateBoard(ms.move.start, ms.move.end);
       if (board.redoStack.isEmpty) {
         isEnableRedo.value = false;
@@ -168,8 +174,8 @@ class ChessBoardController extends GetxController {
   }
 
   //Pop up game state
-  bool gamePopUp(MoveStack ms) {
-    if (ms.isAnyMoveLeft) {
+  bool gamePopUp(bool isAnyMoveLeft) {
+    if (isAnyMoveLeft) {
       if (isInCheck.value) {
         isGameOver = true;
         popUpCheckmate();
@@ -254,10 +260,15 @@ class ChessBoardController extends GetxController {
     selectedPos = -1;
     isWhiteTurn = true;
     isInCheck.value = false;
+    board.movedStack.clear();
+    board.redoStack.clear();
     board.whitePieces.clear();
     board.blackPieces.clear();
+    // board.isRookHasMoved = List.filled(4, 0);
+    // board.isKingHasMoved = List.filled(2, 0);
     board.enPassantPos = -1;
     board.initBoard();
+    moveLogs.clear();
 
     if (isHasTimer) {
       timerController.setClock(_time);
@@ -277,8 +288,9 @@ class ChessBoardController extends GetxController {
           promotionType: piece, isPlayerMoved: true);
       // board.square[previousMove!.end] = piece;
       isInCheck.value = ms.isInCheck;
-      gamePopUp(ms);
-      moveLogs.add(moveLogString(ms));
+      var isAnyMoveLeft = isAnyMoveleft(board, !isWhiteTurn);
+      moveLogs.add(moveLogString(ms, isAnyMoveLeft, isInCheck.value));
+      gamePopUp(isAnyMoveLeft);
       update();
     }
   }
@@ -295,5 +307,13 @@ class ChessBoardController extends GetxController {
     return board.square[indexSquare] != Piece.None &&
         !Piece.isSameColor(
             board.square[indexSquare], board.square[selectedPos]);
+  }
+
+  bool isKingCheck(int indexSquare) {
+    return isInCheck.value
+        ? indexSquare ==
+            getKingChessPiece(isWhiteTurn ? Piece.White : Piece.Black, board)
+                .pos
+        : false;
   }
 }

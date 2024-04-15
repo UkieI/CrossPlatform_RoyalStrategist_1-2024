@@ -2,24 +2,24 @@ import 'package:chess_flutter_app/logic/board/piece.dart';
 import 'package:chess_flutter_app/logic/helpers/board_helpers.dart';
 import 'package:chess_flutter_app/logic/move_generation/move/move.dart';
 import 'package:chess_flutter_app/logic/move_generation/move/move_stack.dart';
-import 'package:chess_flutter_app/logic/move_generation/move_generation.dart';
-import 'package:chess_flutter_app/utils/helpers/chess_functions.dart';
 
 class Board {
   late List<int> square;
   List<MoveStack> movedStack = [];
   List<MoveStack> redoStack = [];
 
-  List<int> whitePieces = [];
-  List<int> blackPieces = [];
+  List<ChessPiece> whitePieces = [];
+  List<ChessPiece> blackPieces = [];
 
-  List<int> kingPositions = [60, 4]; // [0] : whiteKing ; [1] : blackKing
-  bool isWhiteKingMoved = false;
-  bool isBlackKingMoved = false;
-  List<bool> isRookHasMoved = List.filled(4,
-      false); // [0] => Pos : 0 , [1] => Pos : 7, [2] => Pos : 56,  [3] => Pos : 63
-  bool isWhiteKingInCheck = false;
-  bool isBlackKingInCheck = false;
+  // [0] : whiteKing ; [1] : blackKing
+
+  ChessPiece whiteKing = ChessPiece(Piece.WhiteKing, 60);
+  ChessPiece blackKing = ChessPiece(Piece.BlackKing, 4);
+
+  // [0] => Pos : whiteKing , [1] => Pos : blackKing,
+
+  // [0] => Pos : 0 , [1] => Pos : 7, [2] => Pos : 56,  [3] => Pos : 63
+
   int enPassantPiece = Piece.None;
   int enPassantPos = -1;
 
@@ -31,8 +31,7 @@ class Board {
   int noCaptureOrPawnMoves = 0;
 
   initBoard() {
-    String fen = "rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 0";
-    BoardHelper.loadPieceFromfen(this, fen);
+    BoardHelper.loadPieceFromfen(this, BoardHelper.INIT_FEN);
   }
 }
 
@@ -41,13 +40,12 @@ MoveStack push(Board board, Move move,
   var ms = MoveStack(move, board.square[move.start], board.square[move.end],
       board.enPassantPiece, board.enPassantPos);
   // Castled move
-  if (isKingCastle(ms) && isPlayerMoved) {
-    makeMove(board, ms);
+  if (isKingCastle(ms)) {
     castle(board, ms);
   } else {
     // make Move
     makeMove(board, ms, isPlayerMove: isPlayerMoved);
-    if (isPlayerMoved && Piece.pieceType(ms.movedPiece) == Piece.Pawn) {
+    if (Piece.pieceType(ms.movedPiece) == Piece.Pawn) {
       // promotion
       if (isPromotion(ms.movedPiece, ms.move.end)) {
         ms.promotionType = promotionType;
@@ -58,27 +56,17 @@ MoveStack push(Board board, Move move,
       if (isPawnMovedTwoSquare(move)) {
         board.enPassantPos = (move.end + move.start) ~/ 2;
       }
-      board.noCaptureOrPawnMoves = 0;
     } // can taken enPassant
-    if (isPlayerMoved &&
-        isKingInCheck(board, !Piece.isWhite(board.square[ms.move.end]))) {
-      ms.isInCheck = true;
-    }
-    if (isPlayerMoved &&
-        isAnyMoveleft(board, Piece.isWhite(board.square[ms.move.end]))) {
-      ms.isAnyMoveLeft = true;
-    }
-    // board.enPassantPos = ms.enPassantPos;
   }
   board.movedStack.add(ms);
+  // board.enPassantPos = -1;
   board.indexMoveLog++;
   board.noCaptureOrPawnMoves++;
   return ms;
 }
 
 MoveStack pushMS(Board board, MoveStack ms) {
-  return push(board, ms.move,
-      promotionType: ms.promotionType, isPlayerMoved: true);
+  return push(board, ms.move, promotionType: ms.promotionType);
 }
 
 MoveStack pop(Board board) {
@@ -90,7 +78,6 @@ MoveStack pop(Board board) {
     undoCastle(board, ms);
   } else {
     // standard Move
-
     undoMove(board, ms);
     if (ms.isPromotion) {
       // undo Promotion pawn
@@ -99,25 +86,25 @@ MoveStack pop(Board board) {
     if (ms.isEnPassant) {
       var offset = Piece.isWhite(ms.movedPiece) ? 8 : -8;
       // undo EnPassant capture
-      addPiece(board, ms.enPassantPiece);
+      addPiece(board, ms.enPassantPiece, ms.enPassantPos + offset);
       setSquare(board, ms.enPassantPos + offset, ms.enPassantPiece);
+      board.enPassantPos = ms.enPassantPos;
     }
   }
   board.indexMoveLog--;
+  board.noCaptureOrPawnMoves--;
   return ms;
 }
 
 void makeMove(Board board, MoveStack ms, {bool isPlayerMove = false}) {
   setSquare(board, ms.move.end, ms.movedPiece);
   setSquare(board, ms.move.start, Piece.None);
-  if (Piece.pieceType(ms.movedPiece) == Piece.King) {
-    Piece.isWhite(ms.movedPiece)
-        ? board.kingPositions[0] = ms.move.end
-        : board.kingPositions[1] = ms.move.end;
-  }
+
+  makeMovePos(ms, board);
+
   // ms.movedPiece
   if (ms.takenPiece != Piece.None) {
-    removePiece(ms.takenPiece, board);
+    removePiece(ms.takenPiece, board, ms.move.end);
     if (isPlayerMove) {
       board.noCaptureOrPawnMoves = 0;
     }
@@ -127,16 +114,49 @@ void makeMove(Board board, MoveStack ms, {bool isPlayerMove = false}) {
 void undoMove(Board board, MoveStack ms) {
   setSquare(board, ms.move.start, ms.movedPiece);
   setSquare(board, ms.move.end, Piece.None);
-  if (Piece.pieceType(ms.movedPiece) == Piece.King) {
-    Piece.isWhite(ms.movedPiece)
-        ? board.kingPositions[0] = ms.move.start
-        : board.kingPositions[1] = ms.move.start;
-  }
+
+  undoMovePos(ms, board);
+
   if (ms.takenPiece != Piece.None) {
-    addPiece(board, ms.takenPiece);
+    addPiece(board, ms.takenPiece, ms.move.end);
     setSquare(board, ms.move.end, ms.takenPiece);
   }
-  // ms.movedPiece?.moveCount--;
+}
+
+void makeMovePos(MoveStack ms, Board board) {
+  if (Piece.isWhite(ms.movedPiece)) {
+    for (var element in board.whitePieces) {
+      if (element.piece == ms.movedPiece && element.pos == ms.move.start) {
+        element.pos = ms.move.end;
+        element.moveCount++;
+      }
+    }
+  } else {
+    for (var element in board.blackPieces) {
+      if (element.piece == ms.movedPiece && element.pos == ms.move.start) {
+        element.pos = ms.move.end;
+        element.moveCount++;
+      }
+    }
+  }
+}
+
+void undoMovePos(MoveStack ms, Board board) {
+  if (Piece.isWhite(ms.movedPiece)) {
+    for (var element in board.whitePieces) {
+      if (element.piece == ms.movedPiece && element.pos == ms.move.end) {
+        element.pos = ms.move.start;
+        element.moveCount--;
+      }
+    }
+  } else {
+    for (var element in board.blackPieces) {
+      if (element.piece == ms.movedPiece && element.pos == ms.move.end) {
+        element.pos = ms.move.start;
+        element.moveCount--;
+      }
+    }
+  }
 }
 
 void setSquare(Board board, int? squareIndex, int piece) {
@@ -147,25 +167,26 @@ void setSquare(Board board, int? squareIndex, int piece) {
 
 int evaluateBoard(Board board) {
   int value = 0;
-  for (int piece in board.whitePieces + board.blackPieces) {
-    value += Piece.pieceValue(piece);
+  for (var piece in board.whitePieces + board.blackPieces) {
+    value += Piece.pieceValue(piece.piece);
   }
   return value;
 }
 
-void removePiece(int piece, Board board) {
+void removePiece(int piece, Board board, int pos) {
   if (piece != Piece.None) {
-    piecesForPlayer(Piece.isWhite(piece), board).remove(piece);
+    piecesForPlayer(Piece.isWhite(piece), board)
+        .removeWhere((element) => element.piece == piece && element.pos == pos);
   }
 }
 
-void addPiece(Board board, int piece) {
+void addPiece(Board board, int piece, int pos) {
   if (piece != Piece.None) {
-    piecesForPlayer(Piece.isWhite(piece), board).add(piece);
+    piecesForPlayer(Piece.isWhite(piece), board).add(ChessPiece(piece, pos));
   }
 }
 
-List<int> piecesForPlayer(bool isWhite, Board board) {
+List<ChessPiece> piecesForPlayer(bool isWhite, Board board) {
   return isWhite ? board.whitePieces : board.blackPieces;
 }
 
@@ -178,37 +199,50 @@ List<int> queensForPlayer(bool isWhite, Board board) {
 }
 
 void castle(Board board, MoveStack ms) {
+  MoveStack? msR;
+  setSquare(board, ms.move.end, ms.movedPiece);
+  setSquare(board, ms.move.start, Piece.None);
+  makeMovePos(ms, board);
   var eCol = BoardHelper.colIndex(ms.move.end);
+  // [0] => Pos : 0 , [1] => Pos : 7, [2] => Pos : 56,  [3] => Pos : 63
   if (eCol == 2) {
     setSquare(board, ms.move.end + 1, board.square[ms.move.end - 2]);
     setSquare(board, ms.move.end - 2, Piece.None);
+    msR = MoveStack(Move(ms.move.end - 2, ms.move.end + 1),
+        board.square[ms.move.end + 1], 0, 0, 0);
   } else if (eCol == 6) {
     setSquare(board, ms.move.end - 1, board.square[ms.move.end + 1]);
     setSquare(board, ms.move.end + 1, Piece.None);
+    msR = MoveStack(Move(ms.move.end + 1, ms.move.end - 1),
+        board.square[ms.move.end - 1], 0, 0, 0);
   }
-  Piece.isWhite(ms.movedPiece)
-      ? board.kingPositions[0] = ms.move.end
-      : board.kingPositions[1] = ms.move.end;
+  makeMovePos(msR!, board);
+
   ms.isCasted = true;
 }
 
 void undoCastle(Board board, MoveStack ms) {
   var eCol = BoardHelper.colIndex(ms.move.end);
+  MoveStack? msR;
   setSquare(board, ms.move.start, board.square[ms.move.end]);
   setSquare(board, ms.move.end, Piece.None);
+  undoMovePos(ms, board);
   // Queen Side
   if (eCol == 2) {
     // Rook
     setSquare(board, ms.move.end - 2, board.square[ms.move.end + 1]);
     setSquare(board, ms.move.end + 1, Piece.None);
+    msR = MoveStack(Move(ms.move.end - 2, ms.move.end + 1),
+        board.square[ms.move.end - 2], 0, 0, 0);
   } else if (eCol == 6) {
     // Rook
     setSquare(board, ms.move.end + 1, board.square[ms.move.end - 1]);
     setSquare(board, ms.move.end - 1, Piece.None);
+    msR = MoveStack(Move(ms.move.end + 1, ms.move.end - 1),
+        board.square[ms.move.end + 1], 0, 0, 0);
   }
-  Piece.isWhite(ms.movedPiece)
-      ? board.kingPositions[0] = ms.move.end
-      : board.kingPositions[1] = ms.move.end;
+  undoMovePos(msR!, board);
+
   ms.isCasted = true;
 }
 
@@ -216,8 +250,8 @@ void promote(Board board, MoveStack ms) {
   // ms.movedPiece = ms.promotionType != Piece.None ?  ChessPieceType.promotion;
 
   if (ms.promotionType != Piece.None) {
-    removePiece(ms.movedPiece, board);
-    addPiece(board, ms.promotionType);
+    removePiece(ms.movedPiece, board, ms.move.end);
+    addPiece(board, ms.promotionType, ms.move.end);
     // addPromotedPiece(board, ms);
     setSquare(board, ms.move.end, ms.promotionType);
   }
@@ -276,7 +310,7 @@ void checkEnPassant(Board board, MoveStack ms) {
   if (board.square[squareIndex] != Piece.None &&
       ms.move.end == board.enPassantPos) {
     ms.enPassantPiece = board.square[squareIndex];
-    removePiece(board.square[squareIndex], board);
+    removePiece(board.square[squareIndex], board, squareIndex);
     setSquare(board, squareIndex, Piece.None);
     ms.isEnPassant = true;
   } else {
@@ -298,6 +332,11 @@ bool isPawnMovedTwoSquare(Move move) {
   return (move.start - move.end).abs() == 16;
 }
 
+ChessPiece getKingChessPiece(int king, board) {
+  return piecesForPlayer(Piece.isWhite(king), board)
+      .firstWhere((element) => Piece.pieceType(element.piece) == Piece.King);
+}
+
 bool insufficientMaterial(Board board) {
   return isKingVKing(board) ||
       isKingBishopVKing(board) ||
@@ -311,14 +350,16 @@ bool isKingVKing(Board board) {
 
 bool isKingKnightVKing(Board board) {
   return (board.whitePieces.length + board.blackPieces.length) == 3 &&
-      (board.whitePieces.contains(Piece.WhiteKnight) ||
-          board.blackPieces.contains(Piece.BlackKnight));
+      (board.whitePieces.any((element) => element.piece == Piece.WhiteKnight) ||
+          board.blackPieces
+              .any((element) => element.piece == Piece.BlackKnight));
 }
 
 bool isKingBishopVKing(Board board) {
   return (board.whitePieces.length + board.blackPieces.length) == 3 &&
-      (board.whitePieces.contains(Piece.WhiteBishop) ||
-          board.blackPieces.contains(Piece.BlackBishop));
+      (board.whitePieces.any((element) => element.piece == Piece.WhiteBishop) ||
+          board.blackPieces
+              .any((element) => element.piece == Piece.BlackBishop));
 }
 
 bool isKingBishopVKingBishop(Board board) {
@@ -326,30 +367,22 @@ bool isKingBishopVKingBishop(Board board) {
     return false;
   }
   if (board.whitePieces
-              .where((element) => element == Piece.WhiteBishop)
+              .where((element) => element.piece == Piece.WhiteBishop)
               .length !=
           1 ||
       board.blackPieces
-              .where((element) => element == Piece.BlackBishop)
+              .where((element) => element.piece == Piece.BlackBishop)
               .length !=
           1) {
     return false;
   }
-  int wBishopPos = findPiece(Piece.WhiteBishop, board);
-  int bBishopPos = findPiece(Piece.BlackBishop, board);
 
-  return BoardHelper.sameSquareColor(wBishopPos) ==
-      BoardHelper.sameSquareColor(bBishopPos);
-}
-
-int findPiece(int piece, Board board) {
-  for (int squareIndex = 0; squareIndex < 64; squareIndex++) {
-    if (board.square[squareIndex] != Piece.None &&
-        board.square[squareIndex] == piece) {
-      return squareIndex;
-    }
-  }
-  return -1;
+  var wBishopPos = board.whitePieces
+      .firstWhere((element) => element.piece == Piece.WhiteBishop);
+  var bBishopPos = board.blackPieces
+      .firstWhere((element) => element.piece == Piece.BlackBishop);
+  return BoardHelper.sameSquareColor(wBishopPos.pos) ==
+      BoardHelper.sameSquareColor(bBishopPos.pos);
 }
 
 bool fiftyMoveRule(Board board) {

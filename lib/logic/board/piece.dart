@@ -176,3 +176,11 @@ class Piece {
     return isWhite(piece) ? value : -value;
   }
 }
+
+class ChessPiece {
+  int piece;
+  int pos;
+  int moveCount = 0;
+
+  ChessPiece(this.piece, this.pos);
+}

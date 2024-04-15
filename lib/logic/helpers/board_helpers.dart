@@ -1,21 +1,12 @@
+// ignore_for_file: constant_identifier_names
+
 import 'package:chess_flutter_app/logic/board/board.dart';
 import 'package:chess_flutter_app/logic/board/piece.dart';
 import 'package:chess_flutter_app/utils/helpers/chess_functions.dart';
 
 class BoardHelper {
-  // static var rookDirections = [
-  //   Coord(-1, 0),
-  //   Coord(1, 0),
-  //   Coord(0, 1),
-  //   Coord(0, -1)
-  // ];
-
-  // static var bishopDirections = [
-  //   Coord(-1, 1),
-  //   Coord(1, 1),
-  //   Coord(1, -1),
-  //   Coord(-1, -1)
-  // ];
+  static const INIT_FEN =
+      "rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 0";
 
   static String rowName = "12345678";
   static String colName = "abcdefgh";
@@ -76,14 +67,10 @@ class BoardHelper {
         if (isDigit(char)) {
           col += int.parse(char);
         } else {
+          int indexSquare = indexFromRowCol(row, col);
           int piece = Piece.getPieceFromSymbol(char);
-          if (Piece.pieceType(piece) == Piece.King) {
-            Piece.isWhite(piece)
-                ? board.kingPositions[0] = indexFromRowCol(row, col)
-                : board.kingPositions[1] = indexFromRowCol(row, col);
-          }
-          board.square[indexFromRowCol(row, col)] = piece;
-          addPiece(board, piece);
+          board.square[indexSquare] = piece;
+          addPiece(board, piece, indexSquare);
           col++;
         }
       }

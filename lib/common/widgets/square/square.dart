@@ -57,6 +57,7 @@ class Square extends StatelessWidget {
             if (isValidMove)
               !isCaptured ? hintDot(constraints) : hintCapture(constraints),
             dragTargetChessPieces(constraints, dragController),
+            rowAndColumnName(),
           ]);
         }),
       ),
@@ -66,13 +67,7 @@ class Square extends StatelessWidget {
   DragTarget<Object> dragTargetChessPieces(
       BoxConstraints constraints, DragController dragController) {
     return DragTarget(
-      onAcceptWithDetails: (details) {
-        onPlacePosition!(indexSquare);
-      },
-      onWillAcceptWithDetails: (data) {
-        dragController.startDragging();
-        return true;
-      },
+      onAcceptWithDetails: (details) => onPlacePosition!(indexSquare),
       builder: (BuildContext context, List<dynamic> accepted,
           List<dynamic> rejected) {
         return Container(
@@ -96,9 +91,7 @@ class Square extends StatelessWidget {
   }
 
   Widget draggableChessPieces(
-    BoxConstraints constraints,
-    DragController dragController,
-  ) {
+      BoxConstraints constraints, DragController dragController) {
     return Draggable(
         data: indexSquare,
         feedback: SizedBox(
@@ -112,17 +105,13 @@ class Square extends StatelessWidget {
         child: ImageChessPieceWidget(piece, constraints));
   }
 
-  BoxDecoration hlBoxDecoration(
-    BoxConstraints constraints,
-  ) {
+  BoxDecoration hlBoxDecoration(BoxConstraints constraints) {
     return BoxDecoration(
       border: Border.all(width: 3, color: TColors.dragTargetColors),
     );
   }
 
-  Center hintCapture(
-    BoxConstraints constraints,
-  ) {
+  Center hintCapture(BoxConstraints constraints) {
     return Center(
       child: SizedBox(
         height: constraints.maxHeight * 0.9,
@@ -135,9 +124,7 @@ class Square extends StatelessWidget {
     );
   }
 
-  Center hintDot(
-    BoxConstraints constraints,
-  ) {
+  Center hintDot(BoxConstraints constraints) {
     return Center(
       child: Container(
         width: constraints.maxWidth * 0.35,
@@ -145,6 +132,108 @@ class Square extends StatelessWidget {
         decoration: const BoxDecoration(
           shape: BoxShape.circle,
           color: TColors.hintGreenThemeColors,
+        ),
+      ),
+    );
+  }
+
+  Widget rowAndColumnName() {
+    switch (indexSquare) {
+      case 0:
+        return rowNamePositon(8.toString());
+      case 8:
+        return rowNamePositon(7.toString());
+      case 16:
+        return rowNamePositon(6.toString());
+      case 24:
+        return rowNamePositon(5.toString());
+      case 32:
+        return rowNamePositon(4.toString());
+      case 40:
+        return rowNamePositon(3.toString());
+      case 48:
+        return rowNamePositon(2.toString());
+      case 56:
+        return rowNamePositon(1.toString());
+      case 57:
+        return columnNamePositon('b');
+      case 58:
+        return columnNamePositon('c');
+      case 59:
+        return columnNamePositon('d');
+      case 60:
+        return columnNamePositon('e');
+      case 61:
+        return columnNamePositon('f');
+      case 62:
+        return columnNamePositon('g');
+      case 63:
+        return columnNamePositon('h');
+    }
+    // } else {
+    //   switch (position) {
+    //     case 0:
+    //       return rowNamePositon('a');
+    //     case 1:
+    //       return rowNamePositon('b');
+    //     case 2:
+    //       return rowNamePositon('c');
+    //     case 3:
+    //       return rowNamePositon('d');
+    //     case 4:
+    //       return rowNamePositon('e');
+    //     case 5:
+    //       return rowNamePositon('f');
+    //     case 6:
+    //       return rowNamePositon('g');
+    //     case 7:
+    //       return rowNamePositon('h');
+    //     case 15:
+    //       return columnNamePositon(7.toString());
+    //     case 23:
+    //       return columnNamePositon(6.toString());
+    //     case 31:
+    //       return columnNamePositon(5.toString());
+    //     case 39:
+    //       return columnNamePositon(4.toString());
+    //     case 47:
+    //       return columnNamePositon(3.toString());
+    //     case 55:
+    //       return columnNamePositon(2.toString());
+    //     case 63:
+    //       return columnNamePositon(1.toString());
+    //   }
+    // }
+    return const SizedBox.shrink();
+  }
+
+  Widget rowNamePositon(String text) {
+    return Positioned(
+      top: 1,
+      left: 2,
+      child: Text(
+        text,
+        style: TextStyle(
+          fontSize: 11,
+          fontWeight: FontWeight.w900,
+          color:
+              !isWhite ? TColors.bgGreenThemeColor : TColors.fgGreenThemeColor,
+        ),
+      ),
+    );
+  }
+
+  Widget columnNamePositon(String text) {
+    return Positioned(
+      bottom: 1,
+      right: 3,
+      child: Text(
+        text,
+        style: TextStyle(
+          fontSize: 11,
+          fontWeight: FontWeight.w900,
+          color:
+              !isWhite ? TColors.bgGreenThemeColor : TColors.fgGreenThemeColor,
         ),
       ),
     );

@@ -97,26 +97,27 @@ List<int> pawnMoves(int piece, int sPos, Board board) {
   // pawns can move 2 spuares if they are at their intial position
   if ((row == 1 && !isPieceWhite) || (row == 6 && isPieceWhite)) {
     var secondSquare = firstSquare + offset;
-    if (board.square[secondSquare] == Piece.None) {
+    if (board.square[secondSquare] == Piece.None &&
+        board.square[firstSquare] == Piece.None) {
       moves.add(secondSquare);
     }
   }
 
-  // pawns can kill diagonally
+  // pawns can kill diagonallyw
   attackSquare = BoardHelper.indexFromRowCol(row + direction, col - 1);
 
   if (BoardHelper.isValidRowCol(row + direction, col - 1) &&
       ((board.square[attackSquare] != Piece.None &&
-              !Piece.isColour(piece, board.square[attackSquare])) ||
-          canTakeEnPassant(board, attackSquare))) {
+              !Piece.isSameColor(piece, board.square[attackSquare])) ||
+          ((row == 3 || row == 4) && canTakeEnPassant(board, attackSquare)))) {
     moves.add(BoardHelper.indexFromRowCol(row + direction, col - 1));
   }
 
   attackSquare = BoardHelper.indexFromRowCol(row + direction, col + 1);
   if (BoardHelper.isValidRowCol(row + direction, col + 1) &&
       ((board.square[attackSquare] != Piece.None &&
-              !Piece.isColour(piece, board.square[attackSquare])) ||
-          canTakeEnPassant(board, attackSquare))) {
+              !Piece.isSameColor(piece, board.square[attackSquare])) ||
+          ((row == 3 || row == 4) && canTakeEnPassant(board, attackSquare)))) {
     moves.add(BoardHelper.indexFromRowCol(row + direction, col + 1));
   }
 
@@ -156,7 +157,7 @@ List<int> queenMoves(int queen, int sPos, Board board) {
 List<int> kingMoves(int king, int sPos, Board board, bool legal) {
   return movesFromDirections(
           king, sPos, board, ROOK_DIRECTIONS + BISHOP_DIRECTIONS, false) +
-      kingCastleMoves(king, sPos, board, legal);
+      kingCastleMoves(king, board, legal);
 }
 
 List<int> movesFromDirections(
@@ -187,54 +188,47 @@ List<int> movesFromDirections(
   return moves;
 }
 
-List<int> kingCastleMoves(int king, int sPos, Board board, bool legal) {
+// ignore: non_constant_identifier_names
+List<int> kingCastleMoves(int King, Board board, bool legal) {
   List<int> moves = [];
+  // var king = piecesForPlayer(Piece.isWhite(King), board)
+  //     .firstWhere((element) => Piece.pieceType(element.piece) == Piece.King);
+  var king = getKingChessPiece(King, board);
+  // var king = Piece.isWhite(King) ? board.whiteKing : board.blackKing;
+  var rookList = piecesForPlayer(Piece.isWhite(King), board)
+      .where((element) => Piece.pieceType(element.piece) == Piece.Rook)
+      .toList();
+  if (!legal || !isKingInCheck(board, Piece.isWhite(King))) {
+    for (var rook in rookList) {
+      if (king.pos - rook.pos > 0) {
+        if (canCastle(board, king, rook, legal)) moves.add(king.pos - 2);
+      } else {
+        if (canCastle(board, king, rook, legal)) moves.add(king.pos + 2);
+      }
+    }
+  }
 
-  bool rookQueenSide, rookKingSide;
-  if (Piece.isWhite(king)) {
-    rookQueenSide = board.isRookHasMoved[0];
-    rookKingSide = board.isRookHasMoved[1];
-  } else {
-    rookQueenSide = board.isRookHasMoved[2];
-    rookKingSide = board.isRookHasMoved[3];
-  }
-  if (!isKingInCheck(board, Piece.isWhite(king))) {
-    // King Side Check
-    if (canCastle(board, king, sPos, rookKingSide, isCastleKingSide: true)) {
-      moves.add(sPos + 2);
-    }
-    // Queen Side Check
-    if (canCastle(board, king, sPos, rookQueenSide, isCastleKingSide: false)) {
-      moves.add(sPos - 2);
-    }
-  }
   return moves;
 }
 
-bool canCastle(Board board, int king, int sPos, bool isRookHasMove,
+bool canCastle(Board board, ChessPiece king, ChessPiece rook, bool legal,
     {bool isCastleKingSide = true}) {
-  var isKingMoved =
-      Piece.isWhite(king) ? board.isWhiteKingMoved : board.isBlackKingMoved;
-  if (isKingMoved) {
+  if (king.moveCount != 0) {
     return false;
   }
-  if (isRookHasMove) {
-    false;
+  if (rook.moveCount != 0) {
+    return false;
   }
 
-  if (isCastleKingSide) {
-    for (var i = sPos + 1; i < sPos + 3; i++) {
-      if (board.square[i] != Piece.None ||
-          movePutsKingInCheck(board, king, sPos, i)) {
-        return false;
-      }
-    }
-  } else {
-    for (var i = sPos - 1; i > sPos - 4; i--) {
-      if (board.square[i] != Piece.None ||
-          movePutsKingInCheck(board, king, sPos, i)) {
-        return false;
-      }
+  var offset = king.pos - rook.pos > 0 ? 1 : -1;
+  var squareIndex = rook.pos;
+  while (squareIndex != king.pos) {
+    squareIndex += offset;
+    if ((board.square[squareIndex] != Piece.None && king.pos != squareIndex) ||
+        (legal &&
+            kingInCheckAtSquare(
+                board, Piece.isWhite(king.piece), squareIndex))) {
+      return false;
     }
   }
 
@@ -242,48 +236,40 @@ bool canCastle(Board board, int king, int sPos, bool isRookHasMove,
 }
 
 bool movePutsKingInCheck(Board board, int piece, int sPos, int ePos) {
-  push(board, Move(sPos, ePos), isPlayerMoved: false);
+  push(board, Move(sPos, ePos));
   var check = isKingInCheck(board, Piece.isWhite(piece));
   pop(board);
   return check;
 }
 
-bool isKingInCheck(Board board, bool isWhiteKing) {
-  // Check
-  int kingPositons =
-      isWhiteKing ? board.kingPositions[0] : board.kingPositions[1];
-  int kingOpponment =
-      isWhiteKing ? board.kingPositions[1] : board.kingPositions[0];
-  for (int indexSquare = 0; indexSquare < 64; indexSquare++) {
-    if (board.square[indexSquare] == Piece.None ||
-        isWhiteKing == Piece.isWhite(board.square[indexSquare]) ||
-        indexSquare == kingOpponment ||
-        indexSquare == kingPositons) {
-      continue;
-    }
-    List<int> pieceValidMoves = getMovePiece(
-        board.square[indexSquare], indexSquare, board,
-        legal: false);
-
-    if (pieceValidMoves.any((move) => move == kingPositons)) {
+bool kingInCheckAtSquare(Board board, bool isWhiteKing, int kingPos) {
+  for (var piece in piecesForPlayer(!isWhiteKing, board)) {
+    if (getMovePiece(piece.piece, piece.pos, board, legal: false)
+        .contains(kingPos)) {
       return true;
     }
   }
   return false;
 }
 
-bool isAnyMoveleft(Board board, bool isWhiteKing) {
-  // the there is at least one legal move for any player's piece, not checkmate
-  for (int indexSquare = 0; indexSquare < 64; indexSquare++) {
-    if (board.square[indexSquare] == Piece.None ||
-        isWhiteKing != Piece.isWhite(board.square[indexSquare])) {
-      continue;
+bool isKingInCheck(Board board, bool isWhiteKing) {
+  // Check
+  int kingPositons =
+      getKingChessPiece(isWhiteKing ? Piece.White : Piece.Black, board).pos;
+
+  for (var piece in piecesForPlayer(!isWhiteKing, board)) {
+    if (getMovePiece(piece.piece, piece.pos, board, legal: false)
+        .any((elements) => elements == kingPositons)) {
+      return true;
     }
+  }
 
-    List<int> pieceValidMoves =
-        getMovePiece(board.square[indexSquare], indexSquare, board);
+  return false;
+}
 
-    // if this piece is has any moves, that means not checkmate
+bool isAnyMoveleft(Board board, bool isWhiteKing) {
+  for (var piece in piecesForPlayer(!isWhiteKing, board)) {
+    List<int> pieceValidMoves = getMovePiece(piece.piece, piece.pos, board);
     if (pieceValidMoves.isNotEmpty) {
       return false;
     }
@@ -292,7 +278,7 @@ bool isAnyMoveleft(Board board, bool isWhiteKing) {
   return true;
 }
 
-String moveLogString(MoveStack ms) {
+String moveLogString(MoveStack ms, bool isAnyMoveLeft, bool isInCheck) {
   String strFEN = "";
   if (ms.isCasted) {
     if (BoardHelper.colIndex(ms.move.end) == 2) {
@@ -312,10 +298,10 @@ String moveLogString(MoveStack ms) {
   }
 
   strFEN += BoardHelper.squareNameFromSquare(ms.move.end);
-  if (ms.isAnyMoveLeft && ms.isInCheck) {
+  if (isAnyMoveLeft && isInCheck) {
     return strFEN += "#";
   }
-  if (ms.isInCheck) {
+  if (isInCheck) {
     strFEN += "+";
   }
   return strFEN;

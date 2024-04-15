@@ -1,10 +1,12 @@
 import 'package:chess_flutter_app/common/widgets/popup/pop_up_pawn_promotion.dart';
 import 'package:chess_flutter_app/common/widgets/square/square.dart';
 import 'package:chess_flutter_app/controller/chess_board_controller.dart';
+import 'package:chess_flutter_app/logic/board/board.dart';
+import 'package:chess_flutter_app/logic/board/piece.dart';
 import 'package:chess_flutter_app/logic/helpers/board_helpers.dart';
 import 'package:chess_flutter_app/utils/device/device_utility.dart';
 import 'package:chess_flutter_app/utils/helpers/chess_functions.dart';
-import 'package:flutter/widgets.dart';
+import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 
 class ChessBoard extends StatelessWidget {
@@ -28,11 +30,7 @@ class ChessBoard extends StatelessWidget {
                 return GetBuilder<ChessBoardController>(
                   builder: (controller) {
                     bool isSelected = controller.isSelected(index);
-                    bool isKingInCheck = controller.isInCheck.value
-                        ? controller.isWhiteTurn
-                            ? index == controller.board.kingPositions[0]
-                            : index == controller.board.kingPositions[1]
-                        : false;
+                    bool isKingInCheck = controller.isKingCheck(index);
                     bool isPreviousMoved = controller.isPreviousMoved(index);
                     bool isValidMove = false;
                     bool isCaptured = false;
@@ -57,7 +55,6 @@ class ChessBoard extends StatelessWidget {
                       onTap: () => controller.onPieceSelected(index),
                       onPlacePosition: (indexSquare) =>
                           controller.onPieceSelected(indexSquare),
-                      // piece: controller.board.square[index],
                     );
                   },
                 );

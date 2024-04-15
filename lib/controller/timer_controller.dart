@@ -11,7 +11,6 @@ class TimerController extends GetxController {
   RxString timesBlack = '00.00'.obs;
   Timer? _timerWhite;
   Timer? _timerBlack;
-  Timer? _timer;
 
   void setStringTime(RxString timerString, double timerCountdown) {
     int minutes = timerCountdown ~/ 60;
