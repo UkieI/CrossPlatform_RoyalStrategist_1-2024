@@ -11,15 +11,6 @@ class Board {
   List<ChessPiece> whitePieces = [];
   List<ChessPiece> blackPieces = [];
 
-  // [0] : whiteKing ; [1] : blackKing
-
-  ChessPiece whiteKing = ChessPiece(Piece.WhiteKing, 60);
-  ChessPiece blackKing = ChessPiece(Piece.BlackKing, 4);
-
-  // [0] => Pos : whiteKing , [1] => Pos : blackKing,
-
-  // [0] => Pos : 0 , [1] => Pos : 7, [2] => Pos : 56,  [3] => Pos : 63
-
   int enPassantPiece = Piece.None;
   int enPassantPos = -1;
 
@@ -28,10 +19,8 @@ class Board {
   List<int> player1Queens = [];
   List<int> player2Queens = [];
   int indexMoveLog = 0;
-  int noCaptureOrPawnMoves = 0;
-
   initBoard() {
-    BoardHelper.loadPieceFromfen(this, BoardHelper.INIT_FEN);
+    BoardHelper.loadPieceFromfen(this, BoardHelper.TEST_FEN_DRAW);
   }
 }
 
@@ -53,7 +42,7 @@ MoveStack push(Board board, Move move,
       }
       // en Passant
       checkEnPassant(board, ms);
-      if (isPawnMovedTwoSquare(move)) {
+      if (isPawnMovedTwoSquare(ms.move, ms.movedPiece)) {
         board.enPassantPos = (move.end + move.start) ~/ 2;
       }
     } // can taken enPassant
@@ -61,7 +50,7 @@ MoveStack push(Board board, Move move,
   board.movedStack.add(ms);
   // board.enPassantPos = -1;
   board.indexMoveLog++;
-  board.noCaptureOrPawnMoves++;
+
   return ms;
 }
 
@@ -92,7 +81,6 @@ MoveStack pop(Board board) {
     }
   }
   board.indexMoveLog--;
-  board.noCaptureOrPawnMoves--;
   return ms;
 }
 
@@ -105,9 +93,6 @@ void makeMove(Board board, MoveStack ms, {bool isPlayerMove = false}) {
   // ms.movedPiece
   if (ms.takenPiece != Piece.None) {
     removePiece(ms.takenPiece, board, ms.move.end);
-    if (isPlayerMove) {
-      board.noCaptureOrPawnMoves = 0;
-    }
   }
 }
 
@@ -247,7 +232,7 @@ void undoCastle(Board board, MoveStack ms) {
 }
 
 void promote(Board board, MoveStack ms) {
-  // ms.movedPiece = ms.promotionType != Piece.None ?  ChessPieceType.promotion;
+  // ms.movedPiece = ms.promotionType != Piece.None ?
 
   if (ms.promotionType != Piece.None) {
     removePiece(ms.movedPiece, board, ms.move.end);
@@ -282,9 +267,12 @@ void addPromotedPiece(Board board, MoveStack ms) {
 }
 
 void undoPromote(Board board, MoveStack ms) {
-  // ms.movedPiece = Piece.Pawn;
-  // removePiece(ms.promotionType, board);
-  // addPiece(board, ms.movedPiece);
+  if (ms.promotionType != Piece.None) {
+    ms.movedPiece = Piece.Pawn;
+    removePiece(ms.promotionType, board, ms.move.start);
+    addPiece(board, ms.movedPiece, ms.move.start);
+    setSquare(board, ms.move.start, ms.movedPiece);
+  }
 
   switch (Piece.pieceType(ms.promotionType)) {
     case Piece.Queen:
@@ -325,11 +313,12 @@ bool isKingCastle(MoveStack ms) {
 
 bool isPromotion(int piece, int ePos) {
   var row = BoardHelper.rowIndex(ePos);
-  return piece == Piece.Pawn && (row == 7 || row == 0);
+  return Piece.pieceType(piece) == Piece.Pawn && (row == 7 || row == 0);
 }
 
-bool isPawnMovedTwoSquare(Move move) {
-  return (move.start - move.end).abs() == 16;
+bool isPawnMovedTwoSquare(Move move, int piece) {
+  return (move.start - move.end).abs() == 16 &&
+      Piece.pieceType(piece) == Piece.Pawn;
 }
 
 ChessPiece getKingChessPiece(int king, board) {
@@ -385,12 +374,31 @@ bool isKingBishopVKingBishop(Board board) {
       BoardHelper.sameSquareColor(bBishopPos.pos);
 }
 
-bool fiftyMoveRule(Board board) {
-  int fullMoves = board.noCaptureOrPawnMoves ~/ 2;
-  return fullMoves == 50;
-}
-
-bool threeFoldRepetion() {
-  // return stateHistory[stateString] == 3;
-  return false;
+List<bool> isCastleRight(Board board, bool isWhiteKing) {
+  var cRQueenSide = false;
+  var cRKingSide = false;
+  var kingPos = isWhiteKing ? 60 : 4;
+  var rookKingSidePos = isWhiteKing ? 63 : 7;
+  var rookQueenSidePos = isWhiteKing ? 56 : 0;
+  List<ChessPiece> rookList = [];
+  for (var piece in piecesForPlayer(isWhiteKing, board)) {
+    if (Piece.pieceType(piece.piece) == Piece.King &&
+        (piece.pos != kingPos || piece.moveCount != 0)) {
+      return [];
+    }
+    if (Piece.pieceType(piece.piece) == Piece.Rook) {
+      rookList.add(piece);
+    }
+  }
+  for (var rook in rookList) {
+    // Queen side
+    if (rook.pos == rookQueenSidePos && rook.moveCount == 0) {
+      cRQueenSide = true;
+    }
+    // King side
+    if (rook.pos == rookKingSidePos && rook.moveCount == 0) {
+      cRKingSide = true;
+    }
+  }
+  return [cRQueenSide, cRKingSide];
 }

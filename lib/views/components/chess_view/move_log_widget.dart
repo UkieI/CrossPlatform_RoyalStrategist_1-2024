@@ -29,18 +29,19 @@ class MoveLogContainer extends StatelessWidget {
                         style: const TextStyle(color: Colors.white),
                       ),
                       SizedBox(
-                        width: 60,
                         child: TextButton(
                           style: TextButton.styleFrom(
                             textStyle: const TextStyle(
-                              color: Colors.white60,
-                            ),
+                                color: Colors.white60, fontSize: 14),
                             padding: const EdgeInsets.all(0),
                           ),
                           onPressed: () {},
                           child: Text(
                             controller.moveLogs[index],
-                            style: const TextStyle(color: Colors.white54),
+                            style: const TextStyle(
+                              color: Colors.white54,
+                              fontSize: 14,
+                            ),
                           ),
                         ),
                       )
@@ -50,18 +51,21 @@ class MoveLogContainer extends StatelessWidget {
                   return Row(
                     children: [
                       SizedBox(
-                        width: 60,
                         child: TextButton(
                           style: TextButton.styleFrom(
                             textStyle: const TextStyle(
                               color: Colors.white60,
+                              fontSize: 14,
                             ),
                             padding: const EdgeInsets.all(0),
                           ),
                           onPressed: () {},
                           child: Text(
                             controller.moveLogs[index],
-                            style: const TextStyle(color: Colors.white54),
+                            style: const TextStyle(
+                              color: Colors.white54,
+                              fontSize: 14,
+                            ),
                           ),
                         ),
                       ),

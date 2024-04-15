@@ -124,14 +124,6 @@ List<int> pawnMoves(int piece, int sPos, Board board) {
   return moves;
 }
 
-// bool canTakeEnPassant(Board board, int pawn, int diagonal) {
-//   var offset = Piece.isWhite(pawn) ? 8 : -8;
-//   var takenPiece = board.square[diagonal + offset];
-//   return takenPiece != Piece.None &&
-//       !Piece.isSameColor(takenPiece, pawn) &&
-//       takenPiece == board.enPassantPiece;
-// }
-
 bool canTakeEnPassant(Board board, int attackSquare) {
   return board.square[attackSquare] == Piece.None &&
       board.enPassantPos == attackSquare;
@@ -191,10 +183,7 @@ List<int> movesFromDirections(
 // ignore: non_constant_identifier_names
 List<int> kingCastleMoves(int King, Board board, bool legal) {
   List<int> moves = [];
-  // var king = piecesForPlayer(Piece.isWhite(King), board)
-  //     .firstWhere((element) => Piece.pieceType(element.piece) == Piece.King);
   var king = getKingChessPiece(King, board);
-  // var king = Piece.isWhite(King) ? board.whiteKing : board.blackKing;
   var rookList = piecesForPlayer(Piece.isWhite(King), board)
       .where((element) => Piece.pieceType(element.piece) == Piece.Rook)
       .toList();
@@ -253,9 +242,9 @@ bool kingInCheckAtSquare(Board board, bool isWhiteKing, int kingPos) {
 }
 
 bool isKingInCheck(Board board, bool isWhiteKing) {
-  // Check
   int kingPositons =
-      getKingChessPiece(isWhiteKing ? Piece.White : Piece.Black, board).pos;
+      getKingChessPiece(isWhiteKing ? Piece.WhiteKing : Piece.BlackKing, board)
+          .pos;
 
   for (var piece in piecesForPlayer(!isWhiteKing, board)) {
     if (getMovePiece(piece.piece, piece.pos, board, legal: false)
@@ -288,18 +277,25 @@ String moveLogString(MoveStack ms, bool isAnyMoveLeft, bool isInCheck) {
       return "O-O";
     }
   }
-  if (ms.isPromotion) {
-    return strFEN +=
-        "${BoardHelper.squareNameFromSquare(ms.move.end)}=${Piece.getSymbol(ms.promotionType)}${ms.isInCheck ? "+" : ""}";
-  }
+
   strFEN += Piece.getSymbolMoveLog(ms.movedPiece);
   if (ms.takenPiece != Piece.None || ms.enPassantPiece != Piece.None) {
     strFEN += "x";
   }
 
   strFEN += BoardHelper.squareNameFromSquare(ms.move.end);
+
+  if (ms.isPromotion) {
+    strFEN = "";
+    strFEN +=
+        "${BoardHelper.squareNameFromSquare(ms.move.end)}=${Piece.getSymbol(ms.promotionType)}${ms.isInCheck ? "+" : ""}";
+  }
+
   if (isAnyMoveLeft && isInCheck) {
-    return strFEN += "#";
+    return strFEN += "# 1 - 0";
+  }
+  if (isAnyMoveLeft && !isInCheck) {
+    return strFEN += " 1/2 - 1/2";
   }
   if (isInCheck) {
     strFEN += "+";

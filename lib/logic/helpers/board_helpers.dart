@@ -7,7 +7,10 @@ import 'package:chess_flutter_app/utils/helpers/chess_functions.dart';
 class BoardHelper {
   static const INIT_FEN =
       "rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 0";
-
+  static const TEST_FEN_IM_KNvK = "8/8/8/2k1N3/8/8/2Kp4/8 b - - 0 1";
+  static const TEST_FEN_IM_KBvK = "8/8/8/2k1B3/8/8/2Kp4/8 b - - 0 1";
+  static const TEST_FEN_IM_KBvKB = "8/8/8/2k1B3/1b6/8/2Kp4/8 b - - 0 1";
+  static const TEST_FEN_DRAW = "8/8/8/2k5/8/8/4q3/K7 b - - 0 1";
   static String rowName = "12345678";
   static String colName = "abcdefgh";
 

@@ -5,8 +5,13 @@ import 'package:chess_flutter_app/logic/helpers/board_helpers.dart';
 class StateBoardString {
   String sb = "";
 
-  StateBoardString(Board board, bool isWhiteTurn, List<bool>? isCastleKing,
-      String? enPassantMove, int noCaptureOrPawnMoves, int fullmove) {
+  StateBoardString(
+    Board board,
+    bool isWhiteTurn,
+    String? enPassantMove,
+    List<bool> isWhiteCastleRight,
+    List<bool> isBlackCastleRight,
+  ) {
     // Add piece placement data
     addPiecePlacement(board);
     sb += ' ';
@@ -14,7 +19,7 @@ class StateBoardString {
     addCurrentPlayer(isWhiteTurn);
     sb += ' ';
     // Add castling rights
-    addCastlingRights(isCastleKing);
+    addCastlingRights(isWhiteCastleRight, isBlackCastleRight);
     sb += ' ';
     // Add en passant data
     addEnPassant(enPassantMove);
@@ -24,6 +29,7 @@ class StateBoardString {
 
   @override
   String toString() {
+    print(sb);
     return sb.toString();
   }
 
@@ -58,31 +64,28 @@ class StateBoardString {
     isWhiteTurn ? sb += 'w' : sb += 'b';
   }
 
-  void addCastlingRights(List<bool>? isCastleKing) {
-    if (isCastleKing == null) {
-      sb += '-';
-      return;
-    }
-    if (!(isCastleKing[0] ||
-        isCastleKing[1] ||
-        isCastleKing[2] ||
-        isCastleKing[3])) {
+  void addCastlingRights(
+      List<bool> isWhiteCastleRight, List<bool> isBlackCastleRight) {
+    if (isWhiteCastleRight.isEmpty && isBlackCastleRight.isEmpty) {
       sb += '-';
       return;
     }
 
-    if (isCastleKing[0]) {
-      sb += 'K';
+    if (isWhiteCastleRight.isNotEmpty) {
+      if (isWhiteCastleRight[1]) {
+        sb += 'K';
+      }
+      if (isWhiteCastleRight[0]) {
+        sb += 'Q';
+      }
     }
-    if (isCastleKing[1]) {
-      sb += 'Q';
-    }
-
-    if (isCastleKing[2]) {
-      sb += 'k';
-    }
-    if (isCastleKing[3]) {
-      sb += 'q';
+    if (isBlackCastleRight.isNotEmpty) {
+      if (isBlackCastleRight[1]) {
+        sb += 'k';
+      }
+      if (isBlackCastleRight[0]) {
+        sb += 'q';
+      }
     }
   }
 
