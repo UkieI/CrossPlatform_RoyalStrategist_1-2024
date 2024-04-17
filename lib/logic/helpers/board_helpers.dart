@@ -16,7 +16,9 @@ class BoardHelper {
   static const TEST_FEN_ENPASSANT =
       "rnbqkbnr/ppp1p1pp/8/3pPp2/8/8/PPPP1PPP/RNBQKBNR w KQkq f3 0 1";
 
-  static String rowName = "12345678";
+  static const TEST_FEN_PROMOTION = "8/8/8/8/8/8/1K3pk1/8 w - - 0 1";
+
+  static String rowName = "87654321";
   static String colName = "abcdefgh";
 
   static const a1 = 0;
@@ -52,7 +54,7 @@ class BoardHelper {
       lightSquareRowCol(rowIndex(squareIndex), colIndex(squareIndex));
 
   static String squareNameFromRowCol(int fileIndex, int rankIndex) =>
-      "${colName[fileIndex]}${rankIndex + 1}";
+      "${colName[fileIndex]}${rowName[rankIndex]}";
 
   static String squareNameFromSquare(int squareIndex) =>
       squareNameFromRowCol(colIndex(squareIndex), rowIndex(squareIndex));

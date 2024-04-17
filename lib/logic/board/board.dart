@@ -1,9 +1,15 @@
+import 'package:chess_flutter_app/common/widgets/square/square.dart';
+import 'package:chess_flutter_app/logic/board/game_state.dart';
 import 'package:chess_flutter_app/logic/board/piece.dart';
 import 'package:chess_flutter_app/logic/helpers/board_helpers.dart';
 import 'package:chess_flutter_app/logic/move_generation/move/move.dart';
 import 'package:chess_flutter_app/logic/move_generation/move/move_stack.dart';
+import 'package:chess_flutter_app/logic/move_generation/square_value.dart';
 
 class Board {
+  int whiteIndex = 0;
+  int blackIndex = 1;
+
   late List<int> square;
   List<MoveStack> movedStack = [];
   List<MoveStack> redoStack = [];
@@ -19,13 +25,31 @@ class Board {
   List<int> player1Queens = [];
   List<int> player2Queens = [];
   int indexMoveLog = 0;
+
+  // # Side to move info
+  bool isWhiteToMove = true;
+  int moveColour() => isWhiteToMove ? Piece.White : Piece.Black;
+  int opponentColour() => isWhiteToMove ? Piece.Black : Piece.White;
+  int moveColourIndex() => isWhiteToMove ? whiteIndex : blackIndex;
+  int opponentColourIndex() => isWhiteToMove ? blackIndex : whiteIndex;
+
+  late GameState currentGameState;
+
   bool initBoard() {
-    return BoardHelper.loadPieceFromfen(this, BoardHelper.TEST_FEN_ENPASSANT);
+    return BoardHelper.loadPieceFromfen(this, BoardHelper.TEST_FEN_PROMOTION);
+  }
+
+  bool resetBoard() {
+    movedStack.clear();
+    redoStack.clear();
+    whitePieces.clear();
+    blackPieces.clear();
+    enPassantPos = -1;
+    return initBoard();
   }
 }
 
-MoveStack push(Board board, Move move,
-    {bool isPlayerMoved = false, int promotionType = Piece.None}) {
+MoveStack push(Board board, Move move, {int promotionType = Piece.None}) {
   var ms = MoveStack(move, board.square[move.start], board.square[move.end],
       board.enPassantPiece, board.enPassantPos);
   // Castled move
@@ -33,15 +57,16 @@ MoveStack push(Board board, Move move,
     castle(board, ms);
   } else {
     // make Move
-    makeMove(board, ms, isPlayerMove: isPlayerMoved);
+    makeMove(board, ms);
     if (Piece.pieceType(ms.movedPiece) == Piece.Pawn) {
       // promotion
       if (isPromotion(ms.movedPiece, ms.move.end)) {
         ms.promotionType = promotionType;
+        move.promotionType = promotionType;
         promote(board, ms);
       }
       // en Passant
-      checkEnPassant(board, ms);
+      // checkEnPassant(board, ms);
       if (isPawnMovedTwoSquare(ms.move, ms.movedPiece)) {
         board.enPassantPos = (move.end + move.start) ~/ 2;
       }
@@ -50,6 +75,13 @@ MoveStack push(Board board, Move move,
   board.movedStack.add(ms);
   // board.enPassantPos = -1;
   board.indexMoveLog++;
+
+  return ms;
+}
+
+MoveStack makeMoved(Board board, Move move, {int promotionType = Piece.None}) {
+  var ms = MoveStack(move, board.square[move.start], board.square[move.end],
+      board.enPassantPiece, board.enPassantPos);
 
   return ms;
 }
@@ -132,6 +164,7 @@ void undoMovePos(MoveStack ms, Board board) {
       if (element.piece == ms.movedPiece && element.pos == ms.move.end) {
         element.pos = ms.move.start;
         element.moveCount--;
+        if (ms.isCasted) {}
       }
     }
   } else {
@@ -150,10 +183,11 @@ void setSquare(Board board, int? squareIndex, int piece) {
   }
 }
 
-int evaluateBoard(Board board) {
+int evaluateBoard(Board board, bool isWhiteTurn) {
   int value = 0;
   for (var piece in board.whitePieces + board.blackPieces) {
-    value += Piece.pieceValue(piece.piece);
+    value += Piece.pieceValue(piece.piece) +
+        squareValue(piece.piece, piece.pos, isWhiteTurn);
   }
   return value;
 }
@@ -227,8 +261,6 @@ void undoCastle(Board board, MoveStack ms) {
         board.square[ms.move.end + 1], 0, 0, 0);
   }
   undoMovePos(msR!, board);
-
-  ms.isCasted = true;
 }
 
 void promote(Board board, MoveStack ms) {
@@ -402,3 +434,10 @@ List<bool> isCastleRight(Board board, bool isWhiteKing) {
   }
   return [cRQueenSide, cRKingSide];
 }
+
+// bool _inEndGame(Board board) {
+//   return (_queensForPlayer(Player.player1, board).isEmpty &&
+//           _queensForPlayer(Player.player2, board).isEmpty) ||
+//       piecesForPlayer(Player.player1, board).length <= 3 ||
+//       piecesForPlayer(Player.player2, board).length <= 3;
+// }

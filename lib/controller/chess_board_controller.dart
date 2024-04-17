@@ -1,8 +1,11 @@
+import 'dart:async';
+
 import 'package:chess_flutter_app/controller/timer_controller.dart';
 import 'package:chess_flutter_app/logic/board/board.dart';
 import 'package:chess_flutter_app/logic/board/piece.dart';
 import 'package:chess_flutter_app/logic/board/state_board_string.dart';
 import 'package:chess_flutter_app/logic/helpers/board_helpers.dart';
+import 'package:chess_flutter_app/logic/move_generation/ai_move_caculation.dart';
 import 'package:chess_flutter_app/logic/move_generation/move/move.dart';
 import 'package:chess_flutter_app/logic/move_generation/move/move_stack.dart';
 
@@ -71,6 +74,11 @@ class ChessBoardController extends GetxController {
       timerController.setClock(_time);
       isHasTimer = true;
     }
+
+    // Timer.periodic(const Duration(seconds: 1), (timer) {
+    //   // Hành động bạn muốn lặp sau mỗi 3 giây ở đây
+    //   aiMoveGenaration(board, isWhiteTurn);
+    // });
   }
 
   void onPieceSelected(int indexSquare) {
@@ -109,17 +117,15 @@ class ChessBoardController extends GetxController {
   }
 
   void movePiece(int indexSquare) {
-    gameTimerManagement();
     if (validMoves.contains(indexSquare)) {
       if (isPromotion(board.square[selectedPos], indexSquare)) {
         promotion.value = true;
-        push(board, Move(selectedPos, indexSquare), isPlayerMoved: true);
+        push(board, Move(selectedPos, indexSquare));
         isEnableRedo.value = false;
         isEnableUndo.value = false;
         updateBoard(selectedPos, indexSquare);
       } else {
-        var ms =
-            push(board, Move(selectedPos, indexSquare), isPlayerMoved: true);
+        var ms = push(board, Move(selectedPos, indexSquare));
         updateBoard(selectedPos, indexSquare);
         isInCheck.value = isKingInCheck(board, isWhiteTurn);
         var isAnyMoveLeft = isAnyMoveleft(board, !isWhiteTurn);
@@ -132,10 +138,43 @@ class ChessBoardController extends GetxController {
             : noCaptureOrPawnMoves++;
 
         playSound(ms);
+
+        // ai Move
+        if (!isWhiteTurn) {
+          gameTimerManagement();
+          aiMoveGenaration(board, isWhiteTurn);
+        }
       }
       isEnableUndo.value = true;
 
       board.redoStack.clear();
+    }
+  }
+
+  void aiMoveGenaration(Board board, bool isWhiteTurn) async {
+    if (!isGameOver) {
+      try {
+        Move move = calculateAIMove(board, isWhiteTurn);
+        var ms = push(board, move);
+        if (ms.isPromotion) {
+          promote(board, ms);
+        }
+        updateStateString(board, isWhiteTurn, ms);
+        updateBoard(move.start, move.end);
+        isInCheck.value = isKingInCheck(board, isWhiteTurn);
+        var isAnyMoveLeft = isAnyMoveleft(board, !isWhiteTurn);
+        gamePopUp(isAnyMoveLeft);
+        moveLogs.add(moveLogString(ms, isAnyMoveLeft, isInCheck.value));
+
+        ms.takenPiece != Piece.None ||
+                Piece.pieceType(ms.movedPiece) == Piece.Pawn
+            ? noCaptureOrPawnMoves = 0
+            : noCaptureOrPawnMoves++;
+
+        playSound(ms);
+      } catch (e) {
+        e.printError();
+      }
     }
   }
 
@@ -164,12 +203,18 @@ class ChessBoardController extends GetxController {
   void undoMove() {
     if (board.movedStack.isNotEmpty) {
       gameTimerManagement();
+      MoveStack? ms;
       var msRedo = pop(board);
       board.redoStack.add(msRedo);
-      moveLogs.removeLast();
+      if (board.movedStack.isNotEmpty) {
+        ms = board.movedStack.last;
+      }
+      if (moveLogs.isNotEmpty) {
+        moveLogs.removeLast();
+      }
+
+      updateStateString(board, isWhiteTurn, ms, isUpdateStateHistory: false);
       updateBoard(msRedo.move.start, msRedo.move.end);
-      updateStateString(board, isWhiteTurn, msRedo,
-          isUpdateStateHistory: false);
       playSound(msRedo);
       if (board.movedStack.isEmpty) {
         isEnableUndo.value = false;
@@ -290,17 +335,11 @@ class ChessBoardController extends GetxController {
     previousMove = Move(-1, -1);
     selectedPieces = Piece.None;
     selectedPos = -1;
-    isWhiteTurn = true;
+    isWhiteTurn = board.resetBoard();
     isInCheck.value = false;
-    board.movedStack.clear();
-    board.redoStack.clear();
-    board.whitePieces.clear();
-    board.blackPieces.clear();
-    // board.isRookHasMoved = List.filled(4, 0);
-    // board.isKingHasMoved = List.filled(2, 0);
-    board.enPassantPos = -1;
-    board.initBoard();
+    stateHistory.clear();
     moveLogs.clear();
+    isGameOver = false;
 
     if (isHasTimer) {
       timerController.setClock(_time);
@@ -317,7 +356,7 @@ class ChessBoardController extends GetxController {
       promotion.value = false;
       pop(board);
       var ms = push(board, Move(previousMove!.start, previousMove!.end),
-          promotionType: piece, isPlayerMoved: true);
+          promotionType: piece);
       // board.square[previousMove!.end] = piece;
       isInCheck.value = isKingInCheck(board, isWhiteTurn);
       var isAnyMoveLeft = isAnyMoveleft(board, !isWhiteTurn);
@@ -328,6 +367,9 @@ class ChessBoardController extends GetxController {
       updateStateString(board, !isWhiteTurn, ms);
       sound.play(AssetSource(TImages.audioPromote));
       update();
+
+      // after promotion moves
+      aiMoveGenaration(board, isWhiteTurn);
     }
   }
 
@@ -362,16 +404,18 @@ class ChessBoardController extends GetxController {
     return stateHistory[stateString] == 3;
   }
 
-  void updateStateString(Board board, bool isWhiteTurn, MoveStack ms,
+  void updateStateString(Board boardGame, bool isWhiteTurn, MoveStack? ms,
       {isUpdateStateHistory = true}) {
-    int enPassantPos = isPawnMovedTwoSquare(ms.move, ms.movedPiece)
-        ? (ms.move.end + ms.move.start) ~/ 2
-        : -1;
-    List<bool> isWhiteCastleRight = isCastleRight(board, true);
-    List<bool> isBlackCastleRight = isCastleRight(board, false);
-    var previouseState = stateString;
+    int enPassantPos =
+        ms != null && isPawnMovedTwoSquare(ms.move, ms.movedPiece)
+            ? (ms.move.start + ms.move.end) ~/ 2
+            : -1;
+
+    List<bool> isWhiteCastleRight = isCastleRight(boardGame, true);
+    List<bool> isBlackCastleRight = isCastleRight(boardGame, false);
+    var previousMove = stateString;
     stateString = StateBoardString(
-      board,
+      boardGame,
       isWhiteTurn,
       enPassantPos != -1
           ? BoardHelper.squareNameFromSquare(enPassantPos)
@@ -379,12 +423,13 @@ class ChessBoardController extends GetxController {
       isWhiteCastleRight,
       isBlackCastleRight,
     ).toString();
+    print(stateString);
     isUpdateStateHistory
         ? !stateHistory.containsKey(stateString)
             ? stateHistory[stateString] = 1
             : stateHistory[stateString] = stateHistory[stateString]! + 1
-        : stateHistory[previouseState] == 1
-            ? stateHistory.remove(previouseState)
-            : stateHistory[previouseState] = stateHistory[previouseState]! - 1;
+        : stateHistory[previousMove] == 1
+            ? stateHistory.remove(previousMove)
+            : stateHistory[previousMove] = stateHistory[previousMove]! - 1;
   }
 }

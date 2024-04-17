@@ -19,7 +19,7 @@ class MyApp extends StatelessWidget {
       // darkTheme: TAppTheme.darkTheme,
       debugShowCheckedModeBanner: false,
       home: ChessView(
-        setTimer: 600,
+        setTimer: 0,
       ),
     );
   }

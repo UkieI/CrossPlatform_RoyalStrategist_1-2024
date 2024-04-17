@@ -8,7 +8,7 @@ class GameState {
   static const int clearWhiteKingsideMask = 14; // Decimal equivalent of 0b1110
   static const int clearWhiteQueensideMask = 13; // Decimal equivalent of 0b1101
   static const int clearBlackKingsideMask = 11; // Decimal equivalent of 0b1011
-  static const int clearBlackQueensideMask = 7;
+  static const int clearBlackQueensideMask = 7; // Decimal equivalent of 0b0111
 
   GameState(
       {required this.capturedPieceType,

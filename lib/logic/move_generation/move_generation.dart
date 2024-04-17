@@ -4,6 +4,7 @@ import 'package:chess_flutter_app/logic/board/board.dart';
 import 'package:chess_flutter_app/logic/board/piece.dart';
 import 'package:chess_flutter_app/logic/helpers/board_helpers.dart';
 import 'package:chess_flutter_app/logic/move_generation/move/move.dart';
+import 'package:chess_flutter_app/logic/move_generation/move/move_and_value.dart';
 import 'package:chess_flutter_app/logic/move_generation/move/move_stack.dart';
 
 const List<List<int>> ROOK_DIRECTIONS = [
@@ -31,44 +32,80 @@ const List<List<int>> KNIGHT_DIRECTIONS = [
   [2, 1]
 ];
 
+const PROMOTIONS = [Piece.Queen, Piece.Rook, Piece.Bishop, Piece.Knight];
+
+List<Move> allMoves(Board board, bool isWhiteTurn) {
+  List<MoveAndValue> lmv = [];
+  var pieces = piecesForPlayer(isWhiteTurn, board);
+  // Load all the oppoments pieces
+  for (var piece in pieces) {
+    var eSquareList = getMovePiece(piece.piece, piece.pos, board);
+    // Get all valid move pieces
+    for (var eSquare in eSquareList) {
+      // Check if is pawn go to promotion
+      if (isPromotion(piece.piece, eSquare)) {
+        for (var promotion in PROMOTIONS) {
+          var move = MoveAndValue(
+              Move(piece.pos, eSquare,
+                  promotionType: Piece.makePieceIB(promotion, isWhiteTurn)),
+              0);
+          push(board, move.move, promotionType: promotion);
+          move.value = evaluateBoard(board, isWhiteTurn);
+          pop(board);
+          lmv.add(move);
+        }
+      } else {
+        var move = MoveAndValue(Move(piece.pos, eSquare), 0);
+        push(board, move.move);
+        move.value = evaluateBoard(board, isWhiteTurn);
+        pop(board);
+        lmv.add(move);
+      }
+    }
+  }
+  lmv.sort((a, b) =>
+      isWhiteTurn ? b.value.compareTo(a.value) : a.value.compareTo(b.value));
+  return lmv.map((move) => move.move).toList();
+}
+
 List<int> getMovePiece(int piece, int sPos, Board board, {bool legal = true}) {
   List<int> moves;
   switch (Piece.pieceType(piece)) {
     case Piece.Pawn:
       {
         moves = pawnMoves(piece, sPos, board);
-        break;
       }
+      break;
     case Piece.Bishop:
       {
         moves = bishopMoves(piece, sPos, board);
-        break;
       }
+      break;
     case Piece.Knight:
       {
         moves = knightMoves(piece, sPos, board);
-        break;
       }
+      break;
     case Piece.Rook:
       {
         moves = rookMoves(piece, sPos, board);
-        break;
       }
+      break;
     case Piece.Queen:
       {
         moves = queenMoves(piece, sPos, board);
-        break;
       }
+      break;
     case Piece.King:
       {
         moves = kingMoves(piece, sPos, board, legal);
-        break;
       }
+      break;
     default:
       {
         moves = [];
-        break;
       }
+      break;
   }
   if (legal) {
     moves.removeWhere((ePos) => movePutsKingInCheck(board, piece, sPos, ePos));
