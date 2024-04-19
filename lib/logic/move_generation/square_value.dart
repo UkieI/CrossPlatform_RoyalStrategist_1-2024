@@ -1,3 +1,5 @@
+// ignore_for_file: constant_identifier_names
+
 import 'package:chess_flutter_app/logic/board/piece.dart';
 
 const KING_TABLE = [

@@ -6,14 +6,14 @@ class StateBoardString {
   String sb = "";
 
   StateBoardString(
-    Board board,
+    List<int> square,
     bool isWhiteTurn,
     String? enPassantMove,
     List<bool> isWhiteCastleRight,
     List<bool> isBlackCastleRight,
   ) {
     // Add piece placement data
-    addPiecePlacement(board);
+    addPiecePlacement(square);
     sb += ' ';
     // Add current player
     addCurrentPlayer(isWhiteTurn);
@@ -32,10 +32,10 @@ class StateBoardString {
     return sb.toString();
   }
 
-  void addRowData(Board board, int row) {
+  void addRowData(List<int> square, int row) {
     int empty = 0;
     for (int c = 0; c < 8; c++) {
-      if (board.square[BoardHelper.indexFromRowCol(row, c)] == Piece.None) {
+      if (square[BoardHelper.indexFromRowCol(row, c)] == Piece.None) {
         empty++;
         continue;
       }
@@ -43,19 +43,19 @@ class StateBoardString {
         sb += empty.toString();
         empty = 0;
       }
-      sb += Piece.getSymbol(board.square[BoardHelper.indexFromRowCol(row, c)]);
+      sb += Piece.getSymbol(square[BoardHelper.indexFromRowCol(row, c)]);
     }
     if (empty > 0) {
       sb += empty.toString();
     }
   }
 
-  void addPiecePlacement(Board board) {
+  void addPiecePlacement(List<int> square) {
     for (int r = 0; r < 8; r++) {
       if (r != 0) {
         sb += "/";
       }
-      addRowData(board, r);
+      addRowData(square, r);
     }
   }
 
@@ -63,8 +63,7 @@ class StateBoardString {
     isWhiteTurn ? sb += 'w' : sb += 'b';
   }
 
-  void addCastlingRights(
-      List<bool> isWhiteCastleRight, List<bool> isBlackCastleRight) {
+  void addCastlingRights(List<bool> isWhiteCastleRight, List<bool> isBlackCastleRight) {
     if (isWhiteCastleRight.isEmpty && isBlackCastleRight.isEmpty) {
       sb += '-';
       return;

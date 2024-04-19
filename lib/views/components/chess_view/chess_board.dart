@@ -22,8 +22,7 @@ class ChessBoard extends StatelessWidget {
             GridView.builder(
               itemCount: 8 * 8,
               physics: const NeverScrollableScrollPhysics(),
-              gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
-                  crossAxisCount: 8),
+              gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(crossAxisCount: 8),
               itemBuilder: (context, index) {
                 return GetBuilder<ChessBoardController>(
                   builder: (controller) {
@@ -46,13 +45,12 @@ class ChessBoard extends StatelessWidget {
                       piece: controller.board.square[index],
                       isKingIncheck: isKingInCheck,
                       previousMoved: isPreviousMoved,
-                      isWhiteTurn: controller.isWhiteTurn,
+                      isWhiteTurn: controller.board.isWhiteToMove,
                       isSelected: isSelected,
                       isCaptured: isCaptured,
                       isValidMove: isValidMove,
                       onTap: () => controller.onPieceSelected(index),
-                      onPlacePosition: (indexSquare) =>
-                          controller.onPieceSelected(indexSquare),
+                      onPlacePosition: (indexSquare) => controller.onPieceSelected(indexSquare),
                     );
                   },
                 );
@@ -65,12 +63,11 @@ class ChessBoard extends StatelessWidget {
 
                 if (controller.promotion.value) {
                   return PopUpPawnPromotion(
-                    isWhiteTurn: controller.isWhiteTurn,
+                    isWhiteTurn: controller.board.isWhiteToMove,
                     onPieceSelected: (chessPiece) {
                       controller.pawnPromotion(chessPiece);
                     },
-                    colPromotion:
-                        BoardHelper.colIndex(controller.previousMove!.end),
+                    colPromotion: BoardHelper.colIndex(controller.previousMove!.end),
                     width: (width) / 8,
                   );
                 }

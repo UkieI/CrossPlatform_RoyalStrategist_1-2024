@@ -5,15 +5,13 @@ class MoveStack {
   Move move;
   int movedPiece;
   int takenPiece;
-  int enPassantPiece;
   int enPassantPos;
   bool isInCheck = false;
   bool isCasted = false;
   bool isPromotion = false;
-  int promotionType = Piece.None;
   bool isEnPassant = false;
-  bool isAnyMoveLeft = false;
+  int castlingRights;
+  int promotionType = Piece.None;
 
-  MoveStack(this.move, this.movedPiece, this.takenPiece, this.enPassantPiece,
-      this.enPassantPos);
+  MoveStack(this.move, this.movedPiece, this.takenPiece, this.enPassantPos, this.castlingRights);
 }

@@ -32,13 +32,10 @@ class Piece {
   static const typeMask = 7;
   static const colourMask = 8;
 
-  static int makePieceII(int pieceType, int pieceColor) =>
-      pieceType | pieceColor;
-  static int makePieceIB(int pieceType, bool pieceColor) =>
-      makePieceII(pieceType, pieceColor ? White : Black);
+  static int makePieceII(int pieceType, int pieceColor) => pieceType | pieceColor;
+  static int makePieceIB(int pieceType, bool pieceColor) => makePieceII(pieceType, pieceColor ? White : Black);
 
-  static bool isColour(int piece, int colour) =>
-      (piece & colourMask) == colour && piece != 0;
+  static bool isColour(int piece, int colour) => (piece & colourMask) == colour && piece != 0;
 
   static bool isWhite(int piece) => isColour(piece, White);
 
@@ -46,8 +43,7 @@ class Piece {
 
   static int pieceType(int piece) => piece & typeMask;
 
-  static bool isSameColor(int thisPiece, int thatPiece) =>
-      pieceColour(thisPiece) == pieceColour(thatPiece);
+  static bool isSameColor(int thisPiece, int thatPiece) => pieceColour(thisPiece) == pieceColour(thatPiece);
 
   static String getSymbol(int piece) {
     int type = pieceType(piece);
@@ -180,7 +176,6 @@ class Piece {
 class ChessPiece {
   int piece;
   int pos;
-  int moveCount = 0;
 
   ChessPiece(this.piece, this.pos);
 }
