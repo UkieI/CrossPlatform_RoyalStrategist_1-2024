@@ -92,7 +92,7 @@ class Piece {
     return symbol;
   }
 
-  int getPieceTypeFromSymbol(String symbol) {
+  static int getPieceTypeFromSymbol(String symbol) {
     symbol = symbol.toUpperCase();
     switch (symbol) {
       case 'R':

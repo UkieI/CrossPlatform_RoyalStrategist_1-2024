@@ -1,5 +1,6 @@
 import 'dart:async';
 import 'dart:isolate';
+import 'dart:math';
 
 import 'package:chess_flutter_app/controller/timer_controller.dart';
 import 'package:chess_flutter_app/logic/board/board.dart';
@@ -11,6 +12,7 @@ import 'package:chess_flutter_app/logic/move_generation/move/move.dart';
 import 'package:chess_flutter_app/logic/move_generation/move/move_stack.dart';
 
 import 'package:chess_flutter_app/logic/move_generation/move_generation.dart';
+import 'package:chess_flutter_app/logic/move_generation/opening_moves.dart';
 import 'package:chess_flutter_app/utils/constants/image_strings.dart';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
@@ -45,14 +47,17 @@ class ChessBoardController extends GetxController {
   // RxBool isWhiteTurn = true.obs;
   bool isGameOver = false;
   bool isHasTimer = false;
+  bool isAimove = false;
 
   int selectedPieces = Piece.None;
   int selectedPos = -1;
 
   List<int> validMoves = [];
 
-  RxMap whitePiecesTaken = {}.obs;
-  RxMap blackPiecesTaken = {}.obs;
+  List<String> keyPiecesTaken = ['P', 'R', 'N', 'B', 'Q'];
+  Map<String, int> piecesTaken = {};
+  RxInt whiteTakenValue = 0.obs;
+  RxInt blackTakenValue = 0.obs;
 
   RxBool promotion = false.obs;
   RxBool isInCheck = false.obs;
@@ -71,14 +76,6 @@ class ChessBoardController extends GetxController {
 
   @override
   void onInit() {
-    // ever(isWhiteTurn, (_) {
-    //   if (board.isWhiteToMove == isAiMove) {
-    //     // Gọi hàm bắt đầu lượt khi biến bool thay đổi thành true
-    //     // gameTimerManagement();
-    //     aiMoveGenaration(isAiMove);
-    //     // isWhiteTurn.value = !isWhiteTurn.value;
-    //   }
-    // });
     super.onInit();
     board.isWhiteToMove = board.initBoard();
     if (_time != 0) {
@@ -87,9 +84,10 @@ class ChessBoardController extends GetxController {
       isHasTimer = true;
     }
 
-    // Timer.periodic(const Duration(milliseconds: 100), (timer) {
+    // Timer.periodic(const Duration(milliseconds: 1000), (timer) {
     //   // Hành động bạn muốn lặp sau mỗi 3 giây ở đây
-    //   aiMoveGenaration(board.isWhiteToMove);
+    //   board.isWhiteToMove ? aiMoveGenaration(true, 5) : aiMoveGenaration(false, 4);
+    //   update();
     // });
   }
 
@@ -126,15 +124,15 @@ class ChessBoardController extends GetxController {
 
   void movePiece(int indexSquare) async {
     if (validMoves.contains(indexSquare)) {
-      if (isPromotion(board.square[selectedPos], indexSquare)) {
+      var ms = push(board, Move(selectedPos, indexSquare));
+      updateBoard(selectedPos, indexSquare);
+      makeCapturePiece(ms.takenPiece);
+      if (isPromotion(board.square[previousMove!.end], previousMove!.end)) {
         promotion.value = true;
-        push(board, Move(selectedPos, indexSquare));
+        // push(board, Move(selectedPos, indexSquare));
         isEnableRedo.value = false;
         isEnableUndo.value = false;
-        updateBoard(selectedPos, indexSquare);
       } else {
-        var ms = push(board, Move(selectedPos, indexSquare));
-        updateBoard(selectedPos, indexSquare);
         isInCheck.value = isKingInCheck(board, board.isWhiteToMove);
         var isAnyMoveLeft = isAnyMoveleft(board, !board.isWhiteToMove);
         gamePopUp(isAnyMoveLeft);
@@ -145,26 +143,51 @@ class ChessBoardController extends GetxController {
         playSound(ms);
 
         // ai Move
-
-        if (board.isWhiteToMove == isAiMove) {
+        if (board.isWhiteToMove == isAimove) {
           gameTimerManagement();
-          aiMoveGenaration(isAiMove);
+          aiMoveGenaration(isAimove, 4);
           // isWhiteTurn = !isWhiteTurn;
         }
+        isEnableUndo.value = true;
       }
-      isEnableUndo.value = true;
-
       board.redoStack.clear();
     }
   }
 
-  bool isAiMove = false;
+  void makeCapturePiece(int capturePiece) {
+    if (capturePiece != Piece.None) {
+      var symbol = Piece.getSymbol(capturePiece);
+      if (piecesTaken.containsKey(symbol)) {
+        piecesTaken[symbol] = piecesTaken[symbol]! + 1;
+      } else {
+        piecesTaken[symbol] = 1;
+      }
+      var pieceValue = Piece.pieceValue(capturePiece).abs() ~/ 100;
+      Piece.isWhite(capturePiece) ? whiteTakenValue.value += pieceValue : blackTakenValue.value += pieceValue;
+    }
+  }
 
-  void aiMoveGenaration(bool isAiMove) async {
+  void undoCapturePiece(int capturePiece) {
+    if (capturePiece != Piece.None) {
+      var symbol = Piece.getSymbol(capturePiece);
+      if (piecesTaken[symbol] == 1) {
+        piecesTaken.remove(symbol);
+      } else {
+        piecesTaken[symbol] = piecesTaken[symbol]! - 1;
+      }
+
+      var pieceValue = Piece.pieceValue(capturePiece).abs() ~/ 100;
+      Piece.isWhite(capturePiece) ? whiteTakenValue.value -= pieceValue : blackTakenValue.value -= pieceValue;
+    }
+  }
+
+  void aiMoveGenaration(bool isAiMove, int depth) async {
+    await Future.delayed(const Duration(milliseconds: 100));
     if (!isGameOver) {
       try {
-        var move = calculateAIMove(board, isAiMove);
+        var move = calculateAIMove(board, depth, isAiMove);
         var ms = push(board, move, promotionType: move.promotionType);
+        makeCapturePiece(ms.takenPiece);
         updateStateString(board.square, isAiMove, ms);
         updateBoard(move.start, move.end);
 
@@ -176,9 +199,8 @@ class ChessBoardController extends GetxController {
         // ms.takenPiece != Piece.None || Piece.pieceType(ms.movedPiece) == Piece.Pawn ? noCaptureOrPawnMoves = 0 : noCaptureOrPawnMoves++;
 
         playSound(ms);
-        update();
       } catch (e) {
-        e.printError();
+        print(e);
       }
     }
   }
@@ -211,10 +233,16 @@ class ChessBoardController extends GetxController {
       gameTimerManagement();
       var msRedo = pop(board);
       board.redoStack.add(msRedo);
+      undoCapturePiece(msRedo.takenPiece);
+      isInCheck.value = isKingInCheck(board, !board.isWhiteToMove);
+      moveLogs.removeLast();
       updateBoard(msRedo.move.start, msRedo.move.end);
       updateStateString(prerivousBoard, board.isWhiteToMove, msRedo, isUpdateStateHistory: false);
 
       playSound(msRedo);
+      if (board.movedStack.isEmpty) {
+        board.possibleOpenings = List.of(openings[Random().nextInt(openings.length)]);
+      }
       if (board.movedStack.isEmpty) {
         isEnableUndo.value = false;
         isInCheck.value = false;
@@ -231,15 +259,12 @@ class ChessBoardController extends GetxController {
       gameTimerManagement();
       var ms = board.redoStack.removeLast();
       pushMS(board, ms);
-      var isKingCheck = isKingInCheck(board, !board.isWhiteToMove);
-      moveLogs.add(moveLogString(
-        ms,
-        isAnyMoveleft(board, !board.isWhiteToMove),
-        isKingCheck,
-      ));
-      isInCheck.value = isKingCheck;
+      makeCapturePiece(ms.takenPiece);
+      isInCheck.value = isKingInCheck(board, !board.isWhiteToMove);
+      moveLogs.add(moveLogString(ms, isAnyMoveleft(board, !board.isWhiteToMove), isInCheck.value));
       updateBoard(ms.move.start, ms.move.end);
       updateStateString(board.square, !board.isWhiteToMove, ms);
+
       playSound(ms);
       if (board.redoStack.isEmpty) {
         isEnableRedo.value = false;
@@ -336,6 +361,10 @@ class ChessBoardController extends GetxController {
     stateHistory.clear();
     moveLogs.clear();
     isGameOver = false;
+    piecesTaken.clear();
+    whiteTakenValue.value = 0;
+    blackTakenValue.value = 0;
+
     // isWhiteTurn.value = board.isWhiteToMove;
 
     count = 0;
@@ -368,7 +397,7 @@ class ChessBoardController extends GetxController {
       isEnableUndo.value = true;
 
       // update for state of game
-      updateStateString(board.square, board.isWhiteToMove, ms);
+      updateStateString(board.square, !board.isWhiteToMove, ms);
 
       // play sound
       sound.play(AssetSource(TImages.audioPromote));

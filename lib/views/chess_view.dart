@@ -33,8 +33,7 @@ class ChessView extends StatelessWidget {
         ),
         centerTitle: true,
       ),
-      bottomNavigationBar:
-          BottomNavigationGameScreen(chessController: chessController),
+      bottomNavigationBar: BottomNavigationGameScreen(chessController: chessController),
       body: Column(
         children: [
           // Move log

@@ -41,8 +41,7 @@ class Square extends StatelessWidget {
     } else if (isKingIncheck) {
       squareColor = Colors.red;
     } else {
-      squareColor =
-          isWhite ? TColors.bgGreenThemeColor : TColors.fgGreenThemeColor;
+      squareColor = isWhite ? TColors.bgGreenThemeColor : TColors.fgGreenThemeColor;
     }
     return GestureDetector(
       onTap: () {
@@ -54,33 +53,28 @@ class Square extends StatelessWidget {
         color: squareColor,
         child: LayoutBuilder(builder: (context, constraints) {
           return Stack(children: [
-            if (isValidMove)
-              !isCaptured ? hintDot(constraints) : hintCapture(constraints),
+            if (isValidMove) !isCaptured ? hintDot(constraints) : hintCapture(constraints),
             dragTargetChessPieces(constraints, dragController),
             rowAndColumnName(),
+            if (indexSquare == 56) columnNamePositon('a'),
           ]);
         }),
       ),
     );
   }
 
-  DragTarget<Object> dragTargetChessPieces(
-      BoxConstraints constraints, DragController dragController) {
+  DragTarget<Object> dragTargetChessPieces(BoxConstraints constraints, DragController dragController) {
     return DragTarget(
       onAcceptWithDetails: (details) => onPlacePosition!(indexSquare),
-      builder: (BuildContext context, List<dynamic> accepted,
-          List<dynamic> rejected) {
+      builder: (BuildContext context, List<dynamic> accepted, List<dynamic> rejected) {
         return Container(
-            decoration:
-                accepted.isNotEmpty ? hlBoxDecoration(constraints) : null,
+            decoration: accepted.isNotEmpty ? hlBoxDecoration(constraints) : null,
             child: piece != Piece.None
                 ? isWhiteTurn != Piece.isWhite(piece)
                     ? ImageChessPieceWidget(piece, constraints)
                     : !dragController.isDragging.value || !isSelected
                         ? draggableChessPieces(constraints, dragController)
-                        : SizedBox(
-                            width: constraints.maxWidth,
-                            height: constraints.maxHeight)
+                        : SizedBox(width: constraints.maxWidth, height: constraints.maxHeight)
                 : sizeBoxMax(constraints));
       },
     );
@@ -90,8 +84,7 @@ class Square extends StatelessWidget {
     return SizedBox(width: constraints.maxWidth, height: constraints.maxHeight);
   }
 
-  Widget draggableChessPieces(
-      BoxConstraints constraints, DragController dragController) {
+  Widget draggableChessPieces(BoxConstraints constraints, DragController dragController) {
     return Draggable(
         data: indexSquare,
         feedback: SizedBox(
@@ -216,8 +209,7 @@ class Square extends StatelessWidget {
         style: TextStyle(
           fontSize: 11,
           fontWeight: FontWeight.w900,
-          color:
-              !isWhite ? TColors.bgGreenThemeColor : TColors.fgGreenThemeColor,
+          color: !isWhite ? TColors.bgGreenThemeColor : TColors.fgGreenThemeColor,
         ),
       ),
     );
@@ -232,8 +224,7 @@ class Square extends StatelessWidget {
         style: TextStyle(
           fontSize: 11,
           fontWeight: FontWeight.w900,
-          color:
-              !isWhite ? TColors.bgGreenThemeColor : TColors.fgGreenThemeColor,
+          color: !isWhite ? TColors.bgGreenThemeColor : TColors.fgGreenThemeColor,
         ),
       ),
     );

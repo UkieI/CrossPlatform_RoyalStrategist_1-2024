@@ -44,6 +44,7 @@ dependencies:
   http: ^1.1.0
   intl: ^0.18.1
   audioplayers: ^6.0.0
+  dart_style: ^2.3.6
   
   # State Management
   get: ^4.6.6

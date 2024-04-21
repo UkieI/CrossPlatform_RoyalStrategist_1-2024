@@ -69,6 +69,11 @@ class StateBoardString {
       return;
     }
 
+    if (!(isWhiteCastleRight[0] || isWhiteCastleRight[1] || isBlackCastleRight[0] || isBlackCastleRight[1])) {
+      sb += '-';
+      return;
+    }
+
     if (isWhiteCastleRight.isNotEmpty) {
       if (isWhiteCastleRight[1]) {
         sb += 'K';

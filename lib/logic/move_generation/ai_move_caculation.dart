@@ -3,38 +3,44 @@
 import 'dart:math';
 
 import 'package:chess_flutter_app/logic/board/board.dart';
+import 'package:chess_flutter_app/logic/board/piece.dart';
 import 'package:chess_flutter_app/logic/move_generation/move/move.dart';
 import 'package:chess_flutter_app/logic/move_generation/move/move_and_value.dart';
 import 'package:chess_flutter_app/logic/move_generation/move_generation.dart';
+import 'package:chess_flutter_app/logic/move_generation/opening_moves.dart';
 
 const INITIAL_ALPHA = -40000;
 const STALEMATE_ALPHA = -20000;
 const INITIAL_BETA = 40000;
 const STALEMATE_BETA = 20000;
 
-Move calculateAIMove(Board board, bool isWhiteTurn) {
-  return _alphaBeta(board, isWhiteTurn, Move(0, 0), 0, 4, INITIAL_ALPHA, INITIAL_BETA).move;
+Move calculateAIMove(Board board, int depth, bool isAiColor) {
+  if (board.possibleOpenings.isNotEmpty) {
+    return openingMove(board, isAiColor, depth);
+  } else {
+    return _alphaBeta(board, Move(0, 0), 0, depth, INITIAL_ALPHA, INITIAL_BETA).move;
+  }
 }
 
 Move randomAIMove(Board board, bool isWhiteTurn) {
-  List<Move> listMove = allMoves(board, isWhiteTurn);
+  List<Move> listMove = allMoves(board);
   listMove.shuffle();
   return listMove[Random().nextInt(listMove.length)];
 }
 
-MoveAndValue _alphaBeta(Board board, bool isWhiteTurn, Move move, int depth, int maxDepth, int alpha, int beta) {
+MoveAndValue _alphaBeta(Board board, Move move, int depth, int maxDepth, int alpha, int beta) {
   if (depth == maxDepth) {
-    return MoveAndValue(move, evaluateBoard(board, isWhiteTurn));
+    return MoveAndValue(move, evaluateBoard(board));
   }
-  var bestMove = MoveAndValue(Move(0, 0), isWhiteTurn ? INITIAL_ALPHA : INITIAL_BETA);
+  var bestMove = MoveAndValue(Move(0, 0), board.isWhiteToMove ? INITIAL_ALPHA : INITIAL_BETA);
 
-  for (var move in allMoves(board, isWhiteTurn)) {
+  for (var move in allMoves(board)) {
     push(board, move, promotionType: move.promotionType);
-    var result = _alphaBeta(board, !isWhiteTurn, move, depth + 1, maxDepth, alpha, beta);
+    var result = _alphaBeta(board, move, depth + 1, maxDepth, alpha, beta);
     result.move = move;
     pop(board);
 
-    if (isWhiteTurn) {
+    if (board.isWhiteToMove) {
       if (result.value > bestMove.value) {
         bestMove = result;
       }
@@ -52,12 +58,46 @@ MoveAndValue _alphaBeta(Board board, bool isWhiteTurn, Move move, int depth, int
       }
     }
   }
-  if (bestMove.value.abs() == INITIAL_BETA && !isKingInCheck(board, isWhiteTurn)) {
-    if (piecesForPlayer(isWhiteTurn, board).length == 1) {
-      bestMove.value = isWhiteTurn ? STALEMATE_BETA : STALEMATE_ALPHA;
+  if (bestMove.value.abs() == INITIAL_BETA && !isKingInCheck(board, board.isWhiteToMove)) {
+    if (piecesForPlayer(board.isWhiteToMove, board).length == 1) {
+      bestMove.value = board.isWhiteToMove ? STALEMATE_BETA : STALEMATE_ALPHA;
     } else {
-      bestMove.value = isWhiteTurn ? STALEMATE_ALPHA : STALEMATE_BETA;
+      bestMove.value = board.isWhiteToMove ? STALEMATE_ALPHA : STALEMATE_BETA;
     }
   }
   return bestMove;
 }
+
+Move openingMove(Board board, bool isAiMove, int detph) {
+  List<Move> possibleMoves = board.possibleOpenings;
+  Move move;
+  bool isBestMove = false;
+  do {
+    if (possibleMoves.isEmpty) {
+      return _alphaBeta(board, Move(0, 0), 0, detph, INITIAL_ALPHA, INITIAL_BETA).move;
+    }
+    move = possibleMoves.first;
+
+    push(board, move);
+    var result = _alphaBeta(board, move, 0, 2, INITIAL_ALPHA, INITIAL_BETA);
+    result.move = move;
+    pop(board);
+
+    if (result.value < 200) {
+      isBestMove = true;
+    }
+    board.possibleOpenings.remove(move);
+  } while (Piece.isWhite(board.square[move.start]) != isAiMove || board.square[move.start] == Piece.None || !isBestMove);
+  return move;
+}
+
+void getRandomOpeningMoves(Board board) {}
+
+
+// Move openingMove(Board board) {
+//   print('1');
+//   List<Move> possibleMoves = board.possibleOpenings.map((opening) => opening[board.indexMoveLog]).toList();
+//   print('1');
+//   return possibleMoves[Random.secure().nextInt(possibleMoves.length)];
+//   // board.possibleOpenings = List.of(openings[Random().nextInt(openings.length)]);
+// }

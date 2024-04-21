@@ -34,10 +34,10 @@ const List<List<int>> KNIGHT_DIRECTIONS = [
 
 const PROMOTIONS = [Piece.Queen, Piece.Rook, Piece.Bishop, Piece.Knight];
 
-List<Move> allMoves(Board board, bool isWhiteTurn) {
+List<Move> allMoves(Board board) {
   List<MoveAndValue> lmv = [];
   // Load all the oppoments pieces
-  for (var piece in piecesForPlayer(isWhiteTurn, board)) {
+  for (var piece in piecesForPlayer(board.isWhiteToMove, board)) {
     var eSquareList = getMovePiece(piece.piece, piece.pos, board);
     var sSquare = piece.pos;
     // Get all valid move pieces
@@ -47,20 +47,20 @@ List<Move> allMoves(Board board, bool isWhiteTurn) {
         for (var promotion in PROMOTIONS) {
           var move = MoveAndValue(Move(sSquare, eSquare, promotionType: promotion), 0);
           push(board, move.move, promotionType: promotion);
-          move.value = evaluateBoard(board, isWhiteTurn);
+          move.value = evaluateBoard(board);
           pop(board);
           lmv.add(move);
         }
       } else {
         var move = MoveAndValue(Move(sSquare, eSquare), 0);
         push(board, move.move);
-        move.value = evaluateBoard(board, isWhiteTurn);
+        move.value = evaluateBoard(board);
         pop(board);
         lmv.add(move);
       }
     }
   }
-  lmv.sort((a, b) => isWhiteTurn ? b.value.compareTo(a.value) : a.value.compareTo(b.value));
+  lmv.sort((a, b) => board.isWhiteToMove ? b.value.compareTo(a.value) : a.value.compareTo(b.value));
   return lmv.map((move) => move.move).toList();
 }
 
@@ -205,6 +205,9 @@ List<int> movesFromDirections(int piece, int sPos, Board board, var directions, 
 // ignore: non_constant_identifier_names
 List<int> kingCastleMoves(int king, Board board, bool legal) {
   List<int> moves = [];
+  if (board.currentKingCastleRight == 0) {
+    return moves;
+  }
 
   bool isWhite = Piece.isWhite(king);
   int kingPos = isWhite ? board.kingSquare[0] : board.kingSquare[1];
@@ -219,6 +222,9 @@ bool canCastle(Board board, int king, int kingPos, bool legal, {bool isCastleKin
   bool isWhite = Piece.isWhite(king);
   if (isCastleKingSide) {
     if (hasKingsideCastleRight(board.currentKingCastleRight, isWhite)) {
+      if (!BoardHelper.isInBoard(kingPos + 3) || Piece.pieceType(board.square[kingPos + 3]) != Piece.Rook) {
+        return false;
+      }
       for (int i = 1; i < 3; i++) {
         if (board.square[kingPos + i] != Piece.None || (legal && kingInCheckAtSquare(board, isWhite, kingPos + i))) {
           return false;
@@ -228,6 +234,9 @@ bool canCastle(Board board, int king, int kingPos, bool legal, {bool isCastleKin
     }
   } else {
     if (hasQueensideCastleRight(board.currentKingCastleRight, isWhite)) {
+      if (!BoardHelper.isInBoard(kingPos - 4) || Piece.pieceType(board.square[kingPos - 4]) != Piece.Rook) {
+        return false;
+      }
       for (int i = 1; i < 4; i++) {
         if (board.square[kingPos - i] != Piece.None || (legal && kingInCheckAtSquare(board, isWhite, kingPos - i))) {
           return false;
@@ -274,7 +283,6 @@ bool isAnyMoveleft(Board board, bool isWhiteKing) {
       return false;
     }
   }
-
   return true;
 }
 

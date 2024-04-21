@@ -17,6 +17,8 @@ class BoardHelper {
   static const TEST_FEN_PROMOTION_BLACK = "8/8/8/8/8/8/1K3pk1/8 w - - 0 1";
   static const TEST_FEN_PROMOTION_WHITE = "3K4/5P2/8/8/8/1k6/8/8 b - - 0 1";
 
+  static const TEST_FEN_EG_KQvK = "8/8/8/8/3K4/8/1q3k2/8 w - - 0 1";
+
   static String rowName = "87654321";
   static String colName = "abcdefgh";
 
