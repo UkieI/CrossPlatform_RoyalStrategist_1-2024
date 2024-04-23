@@ -2,6 +2,7 @@
 
 import 'package:chess_flutter_app/logic/board/board.dart';
 import 'package:chess_flutter_app/logic/board/piece.dart';
+import 'package:chess_flutter_app/logic/evaluation/evaluation.dart';
 import 'package:chess_flutter_app/logic/helpers/board_helpers.dart';
 import 'package:chess_flutter_app/logic/move_generation/move/move.dart';
 import 'package:chess_flutter_app/logic/move_generation/move/move_and_value.dart';
@@ -36,25 +37,27 @@ const PROMOTIONS = [Piece.Queen, Piece.Rook, Piece.Bishop, Piece.Knight];
 
 List<Move> allMoves(Board board) {
   List<MoveAndValue> lmv = [];
+  Evaluation eval;
   // Load all the oppoments pieces
   for (var piece in piecesForPlayer(board.isWhiteToMove, board)) {
     var eSquareList = getMovePiece(piece.piece, piece.pos, board);
     var sSquare = piece.pos;
     // Get all valid move pieces
     for (var eSquare in eSquareList) {
+      eval = Evaluation();
       // Check if is pawn go to promotion
       if (isPromotion(piece.piece, eSquare)) {
         for (var promotion in PROMOTIONS) {
           var move = MoveAndValue(Move(sSquare, eSquare, promotionType: promotion), 0);
           push(board, move.move, promotionType: promotion);
-          move.value = evaluateBoard(board);
+          move.value = eval.evalutate(board);
           pop(board);
           lmv.add(move);
         }
       } else {
         var move = MoveAndValue(Move(sSquare, eSquare), 0);
         push(board, move.move);
-        move.value = evaluateBoard(board);
+        move.value = eval.evalutate(board);
         pop(board);
         lmv.add(move);
       }
@@ -152,7 +155,7 @@ List<int> pawnMoves(int piece, int sPos, Board board) {
 }
 
 bool canTakeEnPassant(Board board, int attackSquare) {
-  return board.square[attackSquare] == Piece.None && board.movedStack.last.enPassantPos == attackSquare;
+  return board.square[attackSquare] == Piece.None && board.currentEnPassantPos == attackSquare;
 }
 
 List<int> knightMoves(int knight, int sPos, Board board) {
@@ -183,8 +186,12 @@ List<int> movesFromDirections(int piece, int sPos, Board board, var directions, 
     do {
       row += direction[0];
       col += direction[1];
+
+      // Check if squareIndex is valid in board
       if (BoardHelper.isValidRowCol(row, col)) {
         int possiblePiece = board.square[BoardHelper.indexFromRowCol(row, col)];
+
+        // Check if that position is has a piece or not
         if (possiblePiece != Piece.None) {
           if (!Piece.isSameColor(possiblePiece, piece)) {
             moves.add(BoardHelper.indexFromRowCol(row, col));
@@ -211,7 +218,7 @@ List<int> kingCastleMoves(int king, Board board, bool legal) {
 
   bool isWhite = Piece.isWhite(king);
   int kingPos = isWhite ? board.kingSquare[0] : board.kingSquare[1];
-  if (!legal || !isKingInCheck(board, isWhite)) {
+  if (!legal || !calculateInCheckState(board, isWhite)) {
     if (canCastle(board, king, kingPos, legal, isCastleKingSide: true)) moves.add(kingPos + 2);
     if (canCastle(board, king, kingPos, legal, isCastleKingSide: false)) moves.add(kingPos - 2);
   }
@@ -250,7 +257,7 @@ bool canCastle(Board board, int king, int kingPos, bool legal, {bool isCastleKin
 
 bool movePutsKingInCheck(Board board, int piece, int sPos, int ePos) {
   push(board, Move(sPos, ePos));
-  var check = isKingInCheck(board, Piece.isWhite(piece));
+  var check = calculateInCheckState(board, Piece.isWhite(piece));
   pop(board);
   return check;
 }
@@ -264,16 +271,95 @@ bool kingInCheckAtSquare(Board board, bool isWhiteKing, int kingPos) {
   return false;
 }
 
-bool isKingInCheck(Board board, bool isWhiteKing) {
-  int kingPositons = isWhiteKing ? board.kingSquare[0] : board.kingSquare[1];
+// bool calculateInCheckState(Board board, bool isWhiteKing) {
+//   int kingPositons = isWhiteKing ? board.kingSquare[0] : board.kingSquare[1];
 
-  for (var piece in piecesForPlayer(!isWhiteKing, board)) {
-    if (getMovePiece(piece.piece, piece.pos, board, legal: false).any((elements) => elements == kingPositons)) {
-      return true;
-    }
+//   for (var piece in piecesForPlayer(!isWhiteKing, board)) {
+//     if (getMovePiece(piece.piece, piece.pos, board, legal: false).any((elements) => elements == kingPositons)) {
+//       return true;
+//     }
+//   }
+
+//   return false;
+// }
+
+bool calculateInCheckState(Board board, bool isWhiteKing) {
+  int kingSquare = isWhiteKing ? board.kingSquare[0] : board.kingSquare[1];
+
+  int myKing = board.square[kingSquare];
+
+  // isOrthogonalSlider Rook or Queen
+  if (kingInCheckType(board, myKing, kingSquare, ROOK_DIRECTIONS, true, pieceFlag: 0)) {
+    return true;
+  }
+  // isDiagonalSlider  Bishop or Queen
+  if (kingInCheckType(board, myKing, kingSquare, BISHOP_DIRECTIONS, true, pieceFlag: 1)) {
+    return true;
+  }
+  // Knight Check
+  if (kingInCheckType(board, myKing, kingSquare, KNIGHT_DIRECTIONS, false, pieceFlag: 2)) {
+    return true;
+  }
+  // king Check
+  if (kingInCheckType(board, myKing, kingSquare, ROOK_DIRECTIONS + BISHOP_DIRECTIONS, false, pieceFlag: 3)) {
+    return true;
+  }
+  // Pawn Atack
+  if (kingInCheckType(board, myKing, kingSquare, ROOK_DIRECTIONS + BISHOP_DIRECTIONS, false, pieceFlag: 4)) {
+    return true;
   }
 
   return false;
+}
+
+bool kingInCheckType(Board board, int myKing, int kingPos, var directions, bool isRepeat, {int pieceFlag = 0}) {
+  for (List<int> direction in directions) {
+    int row = BoardHelper.rowIndex(kingPos);
+    int col = BoardHelper.colIndex(kingPos);
+    do {
+      row += direction[0];
+      col += direction[1];
+      // Check if squareIndex is valid in board
+      if (BoardHelper.isValidRowCol(row, col)) {
+        int possiblePiece = board.square[BoardHelper.indexFromRowCol(row, col)];
+        // Check if that position is has a piece or not
+        if (possiblePiece != Piece.None) {
+          bool pieceTypeInCheck = kingInCheckFlag(pieceFlag, possiblePiece, row, col, Piece.isWhite(myKing), kingPos);
+          if (!Piece.isSameColor(possiblePiece, myKing) && pieceTypeInCheck) {
+            return true;
+          }
+          break;
+        }
+      }
+      if (!isRepeat) {
+        break;
+      }
+    } while (BoardHelper.isValidRowCol(row, col));
+  }
+  return false;
+}
+
+bool kingInCheckFlag(int pieceFlag, int possiblePiece, int row, int col, bool isWhiteKing, int kingPos) {
+  var pieceTypeInCheck = false;
+  switch (pieceFlag) {
+    case 0: // isOrthogonalSlider Rook or Queen
+      pieceTypeInCheck = Piece.isOrthogonalSlider(possiblePiece);
+      break; // isDiagonalSlider  Bishop or Queen
+    case 1:
+      pieceTypeInCheck = Piece.isDiagonalSlider(possiblePiece);
+      break;
+    case 2:
+      pieceTypeInCheck = Piece.pieceType(possiblePiece) == Piece.Knight;
+      break;
+    case 3:
+      int pawnPos = BoardHelper.indexFromRowCol(row, col);
+      int pawnAtackSquare1 = isWhiteKing ? 7 : -9;
+      int pawnAtackSquare2 = isWhiteKing ? 9 : -7;
+      pieceTypeInCheck =
+          Piece.pieceType(possiblePiece) == Piece.King || (Piece.pieceType(possiblePiece) == Piece.Pawn && ((kingPos == pawnPos + pawnAtackSquare1) || (kingPos == pawnPos + pawnAtackSquare2)));
+      break;
+  }
+  return pieceTypeInCheck;
 }
 
 bool isAnyMoveleft(Board board, bool isWhiteKing) {
@@ -288,7 +374,7 @@ bool isAnyMoveleft(Board board, bool isWhiteKing) {
 
 String moveLogString(MoveStack ms, bool isAnyMoveLeft, bool isInCheck) {
   String strFEN = "";
-  if (ms.isCasted) {
+  if (ms.flags == MoveStack.CastleFlag) {
     if (BoardHelper.colIndex(ms.move.end) == 2) {
       return "O-O-O";
     }
@@ -304,9 +390,9 @@ String moveLogString(MoveStack ms, bool isAnyMoveLeft, bool isInCheck) {
 
   strFEN += BoardHelper.squareNameFromSquare(ms.move.end);
 
-  if (ms.isPromotion) {
+  if (ms.promotionType != Piece.None) {
     strFEN = "";
-    strFEN += "${BoardHelper.squareNameFromSquare(ms.move.end)}=${Piece.getSymbol(ms.promotionType)}${ms.isInCheck ? "+" : ""}";
+    strFEN += "${BoardHelper.squareNameFromSquare(ms.move.end)}=${Piece.getSymbol(ms.promotionType)}${isInCheck ? "+" : ""}";
   }
 
   if (isAnyMoveLeft && isInCheck) {

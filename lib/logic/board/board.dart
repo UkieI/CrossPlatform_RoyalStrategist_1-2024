@@ -3,16 +3,13 @@ import 'dart:math';
 import 'package:chess_flutter_app/logic/board/game_state.dart';
 import 'package:chess_flutter_app/logic/board/piece.dart';
 import 'package:chess_flutter_app/logic/helpers/board_helpers.dart';
-import 'package:chess_flutter_app/logic/move_generation/ai_move_caculation.dart';
 import 'package:chess_flutter_app/logic/move_generation/move/move.dart';
 import 'package:chess_flutter_app/logic/move_generation/move/move_stack.dart';
 import 'package:chess_flutter_app/logic/move_generation/opening_moves.dart';
-import 'package:chess_flutter_app/logic/move_generation/square_value.dart';
-import 'package:get/get.dart';
 
 class Board {
-  int whiteIndex = 0;
-  int blackIndex = 1;
+  static int whiteIndex = 0;
+  static int blackIndex = 1;
 
   late List<int> square;
   List<MoveStack> movedStack = [];
@@ -26,14 +23,13 @@ class Board {
   // List all possible openings
   List<Move> possibleOpenings = [];
   // List<List<Move>> possibleOpenings = List.of(openings);
-  // int enPassantPiece = Piece.None;
-  int enPassantPos = -1;
 
   List<int> player1Rooks = [];
   List<int> player2Rooks = [];
   List<int> player1Queens = [];
   List<int> player2Queens = [];
   int indexMoveLog = 0;
+  bool aiMove = true;
 
   // # Side to move info
   bool isWhiteToMove = true;
@@ -42,15 +38,25 @@ class Board {
   int moveColourIndex() => isWhiteToMove ? whiteIndex : blackIndex;
   int opponentColourIndex() => isWhiteToMove ? blackIndex : whiteIndex;
 
-  late int currentKingCastleRight;
-  int initCastleRight = 15;
+  // GameState
+  int currentKingCastleRight = 15;
+  int currentEnPassantPos = -1;
+  int currentFiftyMoveCounter = 0;
+
+  int initKingCastleRight = 0;
+  int initEnPassantPos = -1;
+  int initFiftyMoveCounter = 0;
 
   bool initBoard() {
     var openingsIndex = Random().nextInt(openings.length);
     possibleOpenings = List.of(openings[openingsIndex]);
     // isWhiteToMove = true;
     var isWhiteToMove = BoardHelper.loadPieceFromfen(this, BoardHelper.INIT_FEN);
-    currentKingCastleRight = initCastleRight; // bin 0b1111
+    initKingCastleRight = currentKingCastleRight;
+    initEnPassantPos = currentEnPassantPos;
+    initFiftyMoveCounter = currentFiftyMoveCounter;
+    aiMove = !isWhiteToMove;
+    // bin 0b1111
     return isWhiteToMove;
   }
 
@@ -62,22 +68,27 @@ class Board {
     redoStack.clear();
     whitePieces.clear();
     blackPieces.clear();
+    currentKingCastleRight = initKingCastleRight;
+    currentEnPassantPos = initEnPassantPos;
+    currentFiftyMoveCounter = initFiftyMoveCounter;
+    aiMove = !isWhiteToMove;
     return initBoard();
   }
 }
 
 MoveStack push(Board board, Move move, {int promotionType = Piece.None}) {
-  var ms = MoveStack(move, board.square[move.start], board.square[move.end], -1, board.currentKingCastleRight);
+  var ms = MoveStack(move, board.square[move.start], board.square[move.end], -1, board.currentKingCastleRight, board.currentFiftyMoveCounter);
   // Get all information
   int startSquare = move.start;
   int targetSquare = move.end;
+
   // isEnPassant bool
 
   int movedPiece = board.square[startSquare];
   int movedPieceType = Piece.pieceType(movedPiece);
 
   int prevCastleState = board.currentKingCastleRight;
-  int prevEnPassantPos = board.enPassantPos;
+  int prevEnPassantPos = board.currentEnPassantPos;
   int newCastlingRights = board.currentKingCastleRight;
 
   bool isEnPassant = (prevEnPassantPos == targetSquare && Piece.pieceType(movedPiece) == Piece.Pawn);
@@ -94,7 +105,8 @@ MoveStack push(Board board, Move move, {int promotionType = Piece.None}) {
     if (isEnPassant) {
       captureSquare = targetSquare + (board.isWhiteToMove ? 8 : -8);
       board.square[captureSquare] = Piece.None;
-      ms.isEnPassant = true;
+      ms.flags = MoveStack.EnPassantCaptureFlag;
+      // ms.isEnPassant = true;
     }
     ms.takenPiece = capturedPiece;
     removePiece(ms.takenPiece, board, targetSquare);
@@ -113,8 +125,7 @@ MoveStack push(Board board, Move move, {int promotionType = Piece.None}) {
       // makeMove(board, ms);
       board.square[castlingRookFromIndex] = Piece.None;
       board.square[castlingRookToIndex] = Piece.Rook | board.moveColour();
-      ms.isCasted = true;
-
+      ms.flags = MoveStack.CastleFlag;
       makeMovePos(board.square[castlingRookToIndex], castlingRookFromIndex, castlingRookToIndex, board);
     }
   }
@@ -128,7 +139,8 @@ MoveStack push(Board board, Move move, {int promotionType = Piece.None}) {
     removePiece(ms.movedPiece, board, targetSquare);
     addPiece(board, promotionPiece, targetSquare);
     setSquare(board, targetSquare, promotionPiece);
-    ms.isPromotion = true;
+
+    // ms.isPromotion = true;
   }
 
   // Pawn has moved two forwards, mark file with en-passant flag
@@ -149,13 +161,23 @@ MoveStack push(Board board, Move move, {int promotionType = Piece.None}) {
       newCastlingRights &= GameState.clearBlackQueensideMask;
     }
   }
-  ms.castlingRights = newCastlingRights;
 
   // Change side to move
   board.isWhiteToMove = !board.isWhiteToMove;
+  int newFiftyMoveCounter = board.currentFiftyMoveCounter + 1;
 
-  board.currentKingCastleRight = newCastlingRights;
-  board.enPassantPos = ms.enPassantPos;
+  // Pawn moves and captures reset the fifty move counter and clear 3-fold repetition history
+  if (movedPieceType == Piece.Pawn || capturedPiece != Piece.None) {
+    newFiftyMoveCounter = 0;
+  }
+
+  // Set again current state board
+  ms.castlingRights = newCastlingRights;
+  ms.fiftyMoveCounter = newFiftyMoveCounter;
+
+  board.currentKingCastleRight = ms.castlingRights;
+  board.currentEnPassantPos = ms.enPassantPos;
+  board.currentFiftyMoveCounter = ms.fiftyMoveCounter;
 
   board.indexMoveLog++;
   board.movedStack.add(ms);
@@ -173,13 +195,20 @@ MoveStack pop(Board board) {
   bool undoingWhiteMove = board.isWhiteToMove;
 
   MoveStack ms = board.movedStack.removeLast();
+
   // bool undoingWhiteMove = Piece.isWhite(ms.movedPiece);
   int movedFrom = ms.move.start;
   int movedTo = ms.move.end;
-  int movedPiece = ms.isPromotion ? Piece.makePieceII(Piece.Pawn, board.moveColour()) : board.square[movedTo];
+  int flags = ms.flags;
+
+  bool undoingPromotion = ms.promotionType != Piece.None;
+  bool undoingEnPassant = flags == MoveStack.EnPassantCaptureFlag;
+  bool undoingCastleKing = flags == MoveStack.CastleFlag;
+
+  int movedPiece = undoingPromotion ? Piece.makePieceII(Piece.Pawn, board.moveColour()) : board.square[movedTo];
   int movedPieceType = Piece.pieceType(movedPiece);
 
-  if (ms.isPromotion) {
+  if (undoingPromotion) {
     int promotedPiece = board.square[movedTo];
     // int pawnPiece =Piece.makePieceII(Piece.Pawn, board.moveColour());
     removePiece(promotedPiece, board, movedTo);
@@ -192,7 +221,7 @@ MoveStack pop(Board board) {
     int captureSquare = movedTo;
     // int capturedPiece = Piece.makePieceII(capturedPieceType, board.opponentColour());
 
-    if (ms.isEnPassant) {
+    if (undoingEnPassant) {
       captureSquare = movedTo + ((undoingWhiteMove) ? 8 : -8);
     }
     addPiece(board, ms.takenPiece, captureSquare);
@@ -203,7 +232,7 @@ MoveStack pop(Board board) {
     board.kingSquare[board.moveColourIndex()] = movedFrom;
 
     // Undo castling
-    if (ms.isCasted) {
+    if (undoingCastleKing) {
       int rookPiece = Piece.makePieceII(Piece.Rook, board.moveColour());
       bool kingside = movedTo == BoardHelper.g1 || movedTo == BoardHelper.g8;
       int rookSquareBeforeCastling = kingside ? movedTo + 1 : movedTo - 2;
@@ -218,12 +247,14 @@ MoveStack pop(Board board) {
   board.indexMoveLog--;
 
   if (board.movedStack.isEmpty) {
-    board.currentKingCastleRight = board.initCastleRight;
-    board.enPassantPos = -1;
+    board.currentKingCastleRight = board.initKingCastleRight;
+    board.currentEnPassantPos = board.initEnPassantPos;
+    board.currentFiftyMoveCounter = board.initFiftyMoveCounter;
   } else {
     var msLast = board.movedStack.last;
+    board.currentFiftyMoveCounter = msLast.fiftyMoveCounter;
     board.currentKingCastleRight = msLast.castlingRights;
-    board.enPassantPos = msLast.enPassantPos;
+    board.currentEnPassantPos = msLast.enPassantPos;
   }
 
   return ms;
@@ -289,75 +320,6 @@ List<int> queensForPlayer(bool isWhite, Board board) {
   return isWhite ? board.player1Queens : board.player2Queens;
 }
 
-void promote(Board board, MoveStack ms) {
-  // ms.movedPiece = ms.promotionType != Piece.None ?
-
-  if (ms.promotionType != Piece.None) {
-    removePiece(ms.movedPiece, board, ms.move.end);
-    addPiece(board, ms.promotionType, ms.move.end);
-    setSquare(board, ms.move.end, ms.promotionType);
-    ms.isPromotion = true;
-  }
-}
-
-void addPromotedPiece(Board board, MoveStack ms) {
-  switch (Piece.pieceType(ms.promotionType)) {
-    case Piece.Queen:
-      {
-        if (ms.movedPiece != Piece.None) {
-          queensForPlayer(Piece.isWhite(ms.movedPiece), board).add(ms.movedPiece);
-        }
-      }
-      break;
-    case Piece.Rook:
-      {
-        if (ms.movedPiece != Piece.None) {
-          rooksForPlayer(Piece.isWhite(ms.movedPiece), board).add(ms.movedPiece);
-        }
-      }
-      break;
-    default:
-      {}
-  }
-}
-
-void undoPromote(Board board, MoveStack ms) {
-  if (ms.promotionType != Piece.None) {
-    ms.movedPiece = Piece.Pawn;
-    removePiece(ms.promotionType, board, ms.move.start);
-    addPiece(board, ms.movedPiece, ms.move.start);
-    setSquare(board, ms.move.start, ms.movedPiece);
-  }
-
-  switch (Piece.pieceType(ms.promotionType)) {
-    case Piece.Queen:
-      {
-        queensForPlayer(Piece.isWhite(ms.movedPiece), board).remove(ms.movedPiece);
-      }
-      break;
-    case Piece.Rook:
-      {
-        rooksForPlayer(Piece.isWhite(ms.movedPiece), board).remove(ms.movedPiece);
-      }
-      break;
-    default:
-      {}
-  }
-}
-
-void checkEnPassant(Board board, MoveStack ms) {
-  var offset = Piece.isWhite(ms.movedPiece) ? 8 : -8;
-  var squareIndex = ms.move.end + offset;
-  if (board.square[squareIndex] != Piece.None && ms.move.end == board.enPassantPos) {
-    ms.takenPiece = board.square[squareIndex];
-    removePiece(board.square[squareIndex], board, squareIndex);
-    setSquare(board, squareIndex, Piece.None);
-    ms.isEnPassant = true;
-  } else {
-    board.enPassantPos = -1;
-  }
-}
-
 bool hasKingsideCastleRight(int castlingRights, bool white) {
   int mask = white ? 1 : 4;
   return (castlingRights & mask) != 0;
@@ -368,9 +330,6 @@ bool hasQueensideCastleRight(int castlingRights, bool white) {
   return (castlingRights & mask) != 0;
 }
 
-// bool isKingCastle(MoveStack ms) {
-//   return (ms.move.start - ms.move.end).abs() == 2 && Piece.pieceType(ms.movedPiece) == Piece.King;
-// }
 bool isKingCastle(int start, int end) {
   return (start - end).abs() == 2;
 }
@@ -383,10 +342,6 @@ bool isPromotion(int piece, int ePos) {
 bool isPawnMovedTwoSquare(int sPos, int ePos, int piece) {
   return (sPos - ePos).abs() == 16 && Piece.pieceType(piece) == Piece.Pawn;
 }
-
-// ChessPiece getKingChessPiece(int king, board) {
-//   return piecesForPlayer(Piece.isWhite(king), board).firstWhere((element) => Piece.pieceType(element.piece) == Piece.King);
-// }
 
 bool insufficientMaterial(Board board) {
   return isKingVKing(board) || isKingBishopVKing(board) || isKingKnightVKing(board) || isKingBishopVKingBishop(board);
@@ -417,18 +372,4 @@ bool isKingBishopVKingBishop(Board board) {
   var wBishopPos = board.whitePieces.firstWhere((element) => element.piece == Piece.WhiteBishop);
   var bBishopPos = board.blackPieces.firstWhere((element) => element.piece == Piece.BlackBishop);
   return BoardHelper.sameSquareColor(wBishopPos.pos) == BoardHelper.sameSquareColor(bBishopPos.pos);
-}
-
-int evaluateBoard(Board board) {
-  int value = 0;
-  for (var piece in board.whitePieces + board.blackPieces) {
-    value += Piece.pieceValue(piece.piece) + squareValue(piece.piece, piece.pos, board.isWhiteToMove, inEndGame(board));
-  }
-  return value;
-}
-
-bool inEndGame(Board board) {
-  return (board.blackPieces.any((element) => element.piece == Piece.BlackQueen) && board.whitePieces.any((element) => element.piece == Piece.WhiteQueen)) ||
-      board.whitePieces.length <= 3 ||
-      board.blackPieces.length <= 3;
 }

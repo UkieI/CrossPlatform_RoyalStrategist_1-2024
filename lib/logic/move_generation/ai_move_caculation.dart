@@ -4,10 +4,10 @@ import 'dart:math';
 
 import 'package:chess_flutter_app/logic/board/board.dart';
 import 'package:chess_flutter_app/logic/board/piece.dart';
+import 'package:chess_flutter_app/logic/evaluation/evaluation.dart';
 import 'package:chess_flutter_app/logic/move_generation/move/move.dart';
 import 'package:chess_flutter_app/logic/move_generation/move/move_and_value.dart';
 import 'package:chess_flutter_app/logic/move_generation/move_generation.dart';
-import 'package:chess_flutter_app/logic/move_generation/opening_moves.dart';
 
 const INITIAL_ALPHA = -40000;
 const STALEMATE_ALPHA = -20000;
@@ -18,7 +18,9 @@ Move calculateAIMove(Board board, int depth, bool isAiColor) {
   if (board.possibleOpenings.isNotEmpty) {
     return openingMove(board, isAiColor, depth);
   } else {
-    return _alphaBeta(board, Move(0, 0), 0, depth, INITIAL_ALPHA, INITIAL_BETA).move;
+    var move = _alphaBeta(board, Move(0, 0), 0, depth, INITIAL_ALPHA, INITIAL_BETA);
+    print(move.value);
+    return move.move;
   }
 }
 
@@ -29,8 +31,10 @@ Move randomAIMove(Board board, bool isWhiteTurn) {
 }
 
 MoveAndValue _alphaBeta(Board board, Move move, int depth, int maxDepth, int alpha, int beta) {
+  Evaluation eval;
   if (depth == maxDepth) {
-    return MoveAndValue(move, evaluateBoard(board));
+    eval = Evaluation();
+    return MoveAndValue(move, eval.evalutate(board));
   }
   var bestMove = MoveAndValue(Move(0, 0), board.isWhiteToMove ? INITIAL_ALPHA : INITIAL_BETA);
 
@@ -58,13 +62,18 @@ MoveAndValue _alphaBeta(Board board, Move move, int depth, int maxDepth, int alp
       }
     }
   }
-  if (bestMove.value.abs() == INITIAL_BETA && !isKingInCheck(board, board.isWhiteToMove)) {
+  if (bestMove.value.abs() == INITIAL_BETA && !calculateInCheckState(board, board.isWhiteToMove)) {
     if (piecesForPlayer(board.isWhiteToMove, board).length == 1) {
-      bestMove.value = board.isWhiteToMove ? STALEMATE_BETA : STALEMATE_ALPHA;
+      bestMove.value = !board.isWhiteToMove ? STALEMATE_BETA : STALEMATE_ALPHA;
     } else {
-      bestMove.value = board.isWhiteToMove ? STALEMATE_ALPHA : STALEMATE_BETA;
+      bestMove.value = !board.isWhiteToMove ? STALEMATE_ALPHA : STALEMATE_BETA;
     }
   }
+
+  // if (isAnyMoveleft(board, board.isWhiteToMove)) {
+  //   bestMove.value = !board.isWhiteToMove ? INITIAL_ALPHA : INITIAL_BETA;
+  // }
+
   return bestMove;
 }
 
@@ -79,11 +88,11 @@ Move openingMove(Board board, bool isAiMove, int detph) {
     move = possibleMoves.first;
 
     push(board, move);
-    var result = _alphaBeta(board, move, 0, 2, INITIAL_ALPHA, INITIAL_BETA);
+    var result = _alphaBeta(board, move, 0, 1, INITIAL_ALPHA, INITIAL_BETA);
     result.move = move;
     pop(board);
 
-    if (result.value < 200) {
+    if (result.value < -100) {
       isBestMove = true;
     }
     board.possibleOpenings.remove(move);

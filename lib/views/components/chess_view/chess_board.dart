@@ -3,7 +3,6 @@ import 'package:chess_flutter_app/common/widgets/square/square.dart';
 import 'package:chess_flutter_app/controller/chess_board_controller.dart';
 import 'package:chess_flutter_app/logic/helpers/board_helpers.dart';
 import 'package:chess_flutter_app/utils/device/device_utility.dart';
-import 'package:chess_flutter_app/utils/helpers/chess_functions.dart';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 
@@ -40,7 +39,7 @@ class ChessBoard extends StatelessWidget {
                       }
                     }
                     return Square(
-                      isWhite: isWhite(index),
+                      isWhite: BoardHelper.sameSquareColor(index),
                       indexSquare: index,
                       piece: controller.board.square[index],
                       isKingIncheck: isKingInCheck,

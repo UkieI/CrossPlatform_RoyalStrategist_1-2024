@@ -1,4 +1,5 @@
-import 'package:chess_flutter_app/logic/board/piece.dart';
+import 'package:chess_flutter_app/common/widgets/piece/image_seleced.dart';
+
 import 'package:flutter/widgets.dart';
 
 class ImageChessPieceWidget extends StatelessWidget {
@@ -12,10 +13,7 @@ class ImageChessPieceWidget extends StatelessWidget {
     return SizedBox(
       width: constraints.maxWidth,
       height: constraints.maxHeight,
-      child: Image.asset(
-        'assets/images/${Piece.isWhite(piece) ? 'w' : 'b'}${Piece.getSymbol(piece).toUpperCase()}.png',
-        fit: BoxFit.fill,
-      ),
+      child: SelectPieces(piece: piece)
     );
   }
 }

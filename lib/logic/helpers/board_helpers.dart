@@ -17,7 +17,13 @@ class BoardHelper {
   static const TEST_FEN_PROMOTION_BLACK = "8/8/8/8/8/8/1K3pk1/8 w - - 0 1";
   static const TEST_FEN_PROMOTION_WHITE = "3K4/5P2/8/8/8/1k6/8/8 b - - 0 1";
 
-  static const TEST_FEN_EG_KQvK = "8/8/8/8/3K4/8/1q3k2/8 w - - 0 1";
+  static const TEST_FEN_EG_KQvK = "8/8/8/7R/3K4/8/13qk2/8 w - - 0 1";
+  static const TEST_FEN_KING_IN_CHECK = "8/8/7n/8/3Kp2r/8/14k2/8 w - - 0 1";
+  static const TEST_FEN_EG_BLACK_KRRvK = "2r5/8/1k6/8/8/8/5K2/8 w - - 0 1";
+  static const TEST_FEN_EG_WHITE_KRRvK = "2R5/8/8/6k1/1K6/8/8/8 b - - 0 1";
+  static const TEST_FEN_EG_WHITE_KNBvK = "8/8/6b1/5n1k/1K6/8/8/8 w - - 0 1";
+
+  static const BOARD_FEN_Saragossa_Opening = "rn2r1k1/pb3pp1/1pq2n1p/4p3/2P5/2NBRN1P/PPQ2PPK/R7 w - - 0 17";
 
   static String rowName = "87654321";
   static String colName = "abcdefgh";
@@ -50,7 +56,7 @@ class BoardHelper {
   static bool lightSquareRowCol(int rowIndex, int colIndex) => (rowIndex + colIndex) % 2 != 0;
   static bool lightSquareSquare(int squareIndex) => lightSquareRowCol(rowIndex(squareIndex), colIndex(squareIndex));
 
-  static String squareNameFromRowCol(int fileIndex, int rankIndex) => "${colName[fileIndex]}${rowName[rankIndex]}";
+  static String squareNameFromRowCol(int row, int col) => "${colName[row]}${rowName[col]}";
 
   static String squareNameFromSquare(int squareIndex) => squareNameFromRowCol(colIndex(squareIndex), rowIndex(squareIndex));
 
@@ -83,19 +89,17 @@ class BoardHelper {
       }
     }
 
-    board.initCastleRight = 15;
-
     if (!listFenBoard[2].contains("K")) {
-      board.initCastleRight &= GameState.clearWhiteKingsideMask;
+      board.currentKingCastleRight &= GameState.clearWhiteKingsideMask;
     }
     if (!listFenBoard[2].contains("Q")) {
-      board.initCastleRight &= GameState.clearWhiteQueensideMask;
+      board.currentKingCastleRight &= GameState.clearWhiteQueensideMask;
     }
     if (!listFenBoard[2].contains("k")) {
-      board.initCastleRight &= GameState.clearBlackKingsideMask;
+      board.currentKingCastleRight &= GameState.clearBlackKingsideMask;
     }
     if (!listFenBoard[2].contains("q")) {
-      board.initCastleRight &= GameState.clearBlackQueensideMask;
+      board.currentKingCastleRight &= GameState.clearBlackQueensideMask;
     }
 
     if (!listFenBoard[3].contains('-')) {

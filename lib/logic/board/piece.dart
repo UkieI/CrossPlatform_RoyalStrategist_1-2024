@@ -45,6 +45,18 @@ class Piece {
 
   static bool isSameColor(int thisPiece, int thatPiece) => pieceColour(thisPiece) == pieceColour(thatPiece);
 
+  // Rook or Queen
+  static bool isOrthogonalSlider(int piece) {
+    var type = pieceType(piece);
+    return type == Queen || type == Rook;
+  }
+
+  // Bishop or Queen
+  static bool isDiagonalSlider(int piece) {
+    var type = pieceType(piece);
+    return type == Queen || type == Bishop;
+  }
+
   static String getSymbol(int piece) {
     int type = pieceType(piece);
     var symbol = (() {
@@ -160,7 +172,7 @@ class Piece {
         value = 900;
         break;
       case King:
-        value = 2000;
+        value = 0;
         break;
       case Pawn:
         value = 100;
@@ -169,7 +181,8 @@ class Piece {
         value = 0;
         break;
     }
-    return isWhite(piece) ? value : -value;
+    return value;
+    // return isWhite(piece) ? value : -value;
   }
 }
 

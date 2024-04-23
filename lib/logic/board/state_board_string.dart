@@ -1,4 +1,3 @@
-import 'package:chess_flutter_app/logic/board/board.dart';
 import 'package:chess_flutter_app/logic/board/piece.dart';
 import 'package:chess_flutter_app/logic/helpers/board_helpers.dart';
 

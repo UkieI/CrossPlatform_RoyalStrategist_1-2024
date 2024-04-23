@@ -3,7 +3,6 @@ import 'package:chess_flutter_app/controller/chess_board_controller.dart';
 import 'package:chess_flutter_app/logic/board/piece.dart';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
-import 'package:http/http.dart';
 
 // ignore: must_be_immutable
 class BoardDeadPieces extends StatelessWidget {
@@ -38,10 +37,10 @@ class BoardDeadPieces extends StatelessWidget {
                 if (point == 0) {
                   return const SizedBox.shrink();
                 }
-                if (point < 0) {
+                if (point > 0) {
                   return isWhitePlayer ? Center(child: Text("+${point.abs().toString()}", style: const TextStyle(color: Colors.white70))) : const SizedBox.shrink();
                 }
-                if (point > 0) {
+                if (point < 0) {
                   return !isWhitePlayer ? Center(child: Text("+${point.abs().toString()}", style: const TextStyle(color: Colors.white70))) : const SizedBox.shrink();
                 }
               } else {
