@@ -10,6 +10,23 @@ class TColors {
 
   static const Color backgroundColor1 = Color(0xFF302e2b);
 
+  // Default background (neo)
+  static const Color wNeoThemeColor = Color(0xFF789a55);
+  static const Color bNeoThemeColor = Color(0xFFe8eecc);
+
+  // Brown color
+  static const Color wBrownThemeColor = Color(0xFFb38862);
+  static const Color bBrownThemeColor = Color(0xFFe9d7b0);
+
+  // Glass color:
+  static const Color wGlassThemeColor = Color(0xFF2a2f3b);
+  static const Color bGlassThemeColor = Color(0xFF697081);
+
+    // wood color:
+  static const Color wWoodThemeColor = Color(0xFF6d4924);
+  static const Color bWoodThemeColor = Color(0xFFcbb480);
+
+
   // Green Theme
   static const Color bgGreenThemeColor = Color(0xFF739552);
   static const Color fgGreenThemeColor = Color(0xFFebecd0);

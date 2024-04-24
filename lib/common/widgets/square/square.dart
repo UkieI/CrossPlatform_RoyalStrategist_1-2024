@@ -41,7 +41,7 @@ class Square extends StatelessWidget {
     } else if (isKingIncheck) {
       squareColor = Colors.red;
     } else {
-      squareColor = isWhite ? TColors.bgGreenThemeColor : TColors.fgGreenThemeColor;
+      squareColor = isWhite ? TColors.wGlassThemeColor : TColors.bGlassThemeColor;
     }
     return GestureDetector(
       onTap: () {
@@ -209,7 +209,7 @@ class Square extends StatelessWidget {
         style: TextStyle(
           fontSize: 11,
           fontWeight: FontWeight.w900,
-          color: !isWhite ? TColors.bgGreenThemeColor : TColors.fgGreenThemeColor,
+          color: !isWhite ? TColors.fgGreenThemeColor : TColors.fgGreenThemeColor,
         ),
       ),
     );
@@ -224,7 +224,7 @@ class Square extends StatelessWidget {
         style: TextStyle(
           fontSize: 11,
           fontWeight: FontWeight.w900,
-          color: !isWhite ? TColors.bgGreenThemeColor : TColors.fgGreenThemeColor,
+          color: !isWhite ? TColors.fgGreenThemeColor : TColors.fgGreenThemeColor,
         ),
       ),
     );

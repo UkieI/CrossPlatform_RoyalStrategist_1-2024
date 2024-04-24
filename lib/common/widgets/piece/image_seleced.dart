@@ -9,7 +9,7 @@ class SelectPieces extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Image.asset(
-      'assets/images/${Piece.isWhite(piece) ? 'w' : 'b'}${Piece.getSymbol(piece).toUpperCase()}.png',
+      'assets/images/glass-${Piece.isWhite(piece) ? 'w' : 'b'}${Piece.getSymbol(piece).toUpperCase()}.png',
       fit: BoxFit.fill,
     );
   }

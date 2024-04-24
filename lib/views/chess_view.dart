@@ -66,7 +66,7 @@ class ChessView extends StatelessWidget {
             ),
             isWhite: false,
             image: Image.asset(
-              'assets/images/bK.png',
+              'assets/images/d-bK.png',
               width: TSizes.appBarHeight,
               fit: BoxFit.cover,
             ),
@@ -98,7 +98,7 @@ class ChessView extends StatelessWidget {
             ),
             isWhite: true,
             image: Image.asset(
-              'assets/images/wK.png',
+              'assets/images/d-wK.png',
               width: TSizes.appBarHeight,
               fit: BoxFit.cover,
             ),
