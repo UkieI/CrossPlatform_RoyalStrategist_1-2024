@@ -63,10 +63,6 @@ MoveAndValue _alphaBeta(Board board, Move move, int depth, int maxDepth, int alp
     }
   }
   if (bestMove.value.abs() == INITIAL_BETA && !calculateInCheckState(board, board.isWhiteToMove)) {
-    if (!isAnyMoveleft(board, !board.isWhiteToMove)) {
-      bestMove.value = board.isWhiteToMove ? STALEMATE_BETA : STALEMATE_ALPHA;
-      return bestMove;
-    }
     if (piecesForPlayer(board.isWhiteToMove, board).length == 1) {
       bestMove.value = !board.isWhiteToMove ? STALEMATE_BETA : STALEMATE_ALPHA;
     } else {
