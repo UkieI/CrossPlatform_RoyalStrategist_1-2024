@@ -144,7 +144,7 @@ class ChessBoardController extends GetxController {
         // ai Move
         if (board.isWhiteToMove == isAimove) {
           gameTimerManagement();
-          aiMoveGenaration(isAimove, 6);
+          aiMoveGenaration(isAimove, 4);
         }
         isEnableUndo.value = true;
       }

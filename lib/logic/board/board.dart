@@ -51,7 +51,7 @@ class Board {
     var openingsIndex = Random().nextInt(openings.length);
     possibleOpenings = List.of(openings[openingsIndex]);
     // isWhiteToMove = true;
-    var isWhiteToMove = BoardHelper.loadPieceFromfen(this, BoardHelper.TEST_FEN_EG_WHITE_KRRvK);
+    var isWhiteToMove = BoardHelper.loadPieceFromfen(this, BoardHelper.INIT_FEN);
     initKingCastleRight = currentKingCastleRight;
     initEnPassantPos = currentEnPassantPos;
     initFiftyMoveCounter = currentFiftyMoveCounter;

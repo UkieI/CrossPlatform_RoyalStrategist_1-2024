@@ -10,6 +10,14 @@ class TColors {
 
   static const Color backgroundColor1 = Color(0xFF302e2b);
 
+  static const Color appBarSelectColor = Color(0xFF7f985a);
+  static const Color appBarLowColor = Color(0xFFa8afce);
+
+  static const Color elevatedButton = Color(0xFF413d3b);
+  static const Color outlinedButton = Color(0xFF413d3b);
+
+  static const Color borderColor = Color(0xFF121110);
+
   // Default background (neo)
   static const Color wNeoThemeColor = Color(0xFF789a55);
   static const Color bNeoThemeColor = Color(0xFFe8eecc);
@@ -22,10 +30,9 @@ class TColors {
   static const Color wGlassThemeColor = Color(0xFF2a2f3b);
   static const Color bGlassThemeColor = Color(0xFF697081);
 
-    // wood color:
+  // wood color:
   static const Color wWoodThemeColor = Color(0xFF6d4924);
   static const Color bWoodThemeColor = Color(0xFFcbb480);
-
 
   // Green Theme
   static const Color bgGreenThemeColor = Color(0xFF739552);

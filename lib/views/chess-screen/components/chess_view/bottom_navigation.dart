@@ -2,7 +2,7 @@ import 'package:chess_flutter_app/common/widgets/navigation/navigation_button/na
 import 'package:chess_flutter_app/common/widgets/navigation/navigation_menu.dart';
 import 'package:chess_flutter_app/controller/chess_board_controller.dart';
 
-import 'package:chess_flutter_app/views/components/chess_view/dialog_options.dart';
+import 'package:chess_flutter_app/views/chess-screen/components/chess_view/dialog_options.dart';
 import 'package:flutter/material.dart';
 import 'package:iconsax/iconsax.dart';
 

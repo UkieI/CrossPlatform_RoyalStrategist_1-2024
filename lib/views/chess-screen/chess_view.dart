@@ -2,10 +2,10 @@ import 'package:chess_flutter_app/controller/chess_board_controller.dart';
 import 'package:chess_flutter_app/utils/constants/colors.dart';
 import 'package:chess_flutter_app/utils/constants/sizes.dart';
 
-import 'package:chess_flutter_app/views/components/chess_view/bottom_navigation.dart';
-import 'package:chess_flutter_app/views/components/chess_view/chess_board.dart';
-import 'package:chess_flutter_app/views/components/chess_view/move_log_widget.dart';
-import 'package:chess_flutter_app/views/components/chess_view/player_widget.dart';
+import 'package:chess_flutter_app/views/chess-screen/components/chess_view/bottom_navigation.dart';
+import 'package:chess_flutter_app/views/chess-screen/components/chess_view/chess_board.dart';
+import 'package:chess_flutter_app/views/chess-screen/components/chess_view/move_log_widget.dart';
+import 'package:chess_flutter_app/views/chess-screen/components/chess_view/player_widget.dart';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 

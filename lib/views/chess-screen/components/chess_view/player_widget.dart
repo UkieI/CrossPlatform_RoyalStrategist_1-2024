@@ -1,6 +1,6 @@
 import 'package:chess_flutter_app/utils/constants/colors.dart';
 import 'package:chess_flutter_app/utils/constants/sizes.dart';
-import 'package:chess_flutter_app/views/components/chess_view/board_dead_piece.dart';
+import 'package:chess_flutter_app/views/chess-screen/components/chess_view/board_dead_piece.dart';
 import 'package:flutter/material.dart';
 
 class PlayerContainer extends StatelessWidget {

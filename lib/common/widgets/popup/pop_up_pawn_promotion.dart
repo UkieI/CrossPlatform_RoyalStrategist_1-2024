@@ -1,4 +1,4 @@
-import 'package:chess_flutter_app/views/components/chess_view/chess_piece_selector.dart';
+import 'package:chess_flutter_app/views/chess-screen/components/chess_view/chess_piece_selector.dart';
 
 import 'package:flutter/material.dart';
 
