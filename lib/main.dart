@@ -1,8 +1,6 @@
 import 'package:chess_flutter_app/utils/constants/text_strings.dart';
 import 'package:chess_flutter_app/utils/theme/theme.dart';
-import 'package:chess_flutter_app/views/chess-screen/chess_view.dart';
 import 'package:chess_flutter_app/views/home-screen/components/bottom-navigation-home.dart';
-import 'package:chess_flutter_app/views/home-screen/home-view.dart';
 
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';

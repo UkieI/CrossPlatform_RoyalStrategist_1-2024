@@ -26,10 +26,10 @@ class Evaluation {
     whiteEval.mopUpScore = mopUpEval(true, whitePieces, blackPieces);
     blackEval.mopUpScore = mopUpEval(false, blackPieces, whitePieces);
 
-    int perspective = board.isWhiteToMove == board.aiMove ? 1 : -1;
+    // int perspective = board.isWhiteToMove != board.aiMove ? 1 : -1;
     int eval = whiteEval.sum() - blackEval.sum();
 
-    return eval * perspective;
+    return eval;
   }
 
   int mopUpEval(bool isWhite, MaterialInfo myMaterial, MaterialInfo enemyMaterial) {
@@ -134,7 +134,6 @@ int forceKingToCornerEndGameVal(int myKingPos, int opKingPos, double oppEndGameV
 
   return (evaluations * 10 * oppEndGameVal).truncate();
 }
-
 
 bool inEndGame(Board board) {
   return board.whitePieces.length <= 3 || board.blackPieces.length <= 3;

@@ -9,11 +9,15 @@ class SquarePromotion extends StatelessWidget {
     required this.isWhite,
     this.onTap,
     required this.piece,
+    required this.isRotated,
+    required this.theme,
   });
   final bool isWhite;
 
   final int piece;
   final void Function()? onTap;
+  final int isRotated;
+  final String theme;
 
   @override
   Widget build(BuildContext context) {
@@ -22,7 +26,11 @@ class SquarePromotion extends StatelessWidget {
       onPanCancel: onTap,
       child: Container(
         color: TColors.fgGreenThemeColor,
-        child: SelectPieces(piece: piece),
+        child: SelectPieces(
+          piece: piece,
+          isRotated: isRotated,
+          theme: theme,
+        ),
       ),
     );
   }

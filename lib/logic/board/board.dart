@@ -47,20 +47,25 @@ class Board {
   int initEnPassantPos = -1;
   int initFiftyMoveCounter = 0;
 
-  bool initBoard() {
-    var openingsIndex = Random().nextInt(openings.length);
-    possibleOpenings = List.of(openings[openingsIndex]);
-    // isWhiteToMove = true;
-    var isWhiteToMove = BoardHelper.loadPieceFromfen(this, BoardHelper.INIT_FEN);
+  bool initBoard(String fen) {
+    bool isWhiteToMove;
+    if (fen.isEmpty) {
+      isWhiteToMove = BoardHelper.loadPieceFromfen(this, BoardHelper.INIT_FEN);
+      var openingsIndex = Random().nextInt(openings.length);
+      possibleOpenings = List.of(openings[openingsIndex]);
+    } else {
+      isWhiteToMove = BoardHelper.loadPieceFromfen(this, fen);
+    }
+
     initKingCastleRight = currentKingCastleRight;
     initEnPassantPos = currentEnPassantPos;
     initFiftyMoveCounter = currentFiftyMoveCounter;
-    aiMove = !isWhiteToMove;
+
     // bin 0b1111
     return isWhiteToMove;
   }
 
-  bool resetBoard() {
+  bool resetBoard(String fen) {
     var openingsIndex = Random().nextInt(openings.length);
     possibleOpenings = List.of(openings[openingsIndex]);
     indexMoveLog = 0;
@@ -72,7 +77,7 @@ class Board {
     currentEnPassantPos = initEnPassantPos;
     currentFiftyMoveCounter = initFiftyMoveCounter;
     aiMove = !isWhiteToMove;
-    return initBoard();
+    return initBoard(fen);
   }
 }
 

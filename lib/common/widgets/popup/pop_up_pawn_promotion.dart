@@ -9,11 +9,15 @@ class PopUpPawnPromotion extends StatelessWidget {
     required this.onPieceSelected,
     required this.colPromotion,
     required this.width,
+    required this.isRotated,
+    required this.theme,
   });
   final bool isWhiteTurn;
   final Function(int) onPieceSelected;
   final int colPromotion;
   final double width;
+  final int isRotated;
+  final String theme;
 
   @override
   Widget build(BuildContext context) {
@@ -25,6 +29,8 @@ class PopUpPawnPromotion extends StatelessWidget {
               width: width,
               onPieceSelected: onPieceSelected,
               isWhite: !isWhiteTurn,
+              isRotated: isRotated,
+              theme: theme,
             ))
         : Positioned(
             bottom: 0,
@@ -33,6 +39,8 @@ class PopUpPawnPromotion extends StatelessWidget {
               width: width,
               onPieceSelected: onPieceSelected,
               isWhite: !isWhiteTurn,
+              isRotated: isRotated,
+              theme: theme,
             ),
           );
   }

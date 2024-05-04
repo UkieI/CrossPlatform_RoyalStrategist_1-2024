@@ -12,19 +12,21 @@ import 'package:chess_flutter_app/logic/move_generation/move/move_stack.dart';
 
 import 'package:chess_flutter_app/logic/move_generation/move_generation.dart';
 import 'package:chess_flutter_app/logic/move_generation/opening_moves.dart';
+import 'package:chess_flutter_app/model/game_mode.dart';
 import 'package:chess_flutter_app/utils/constants/image_strings.dart';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:audioplayers/audioplayers.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 
 // ignore: constant_identifier_names
 const TIMER_ACCURACY_MS = 100;
 
 class ChessBoardController extends GetxController {
   late final BuildContext _context;
-  late final double _time;
+  late final GameMode mode;
   // Constructor to receive the context
-  ChessBoardController(this._context, this._time);
+  ChessBoardController(this._context, this.mode);
 
   // Timer Controller
   late TimerController timerController;
@@ -62,6 +64,7 @@ class ChessBoardController extends GetxController {
   RxBool isInCheck = false.obs;
   RxBool isEnableRedo = false.obs;
   RxBool isEnableUndo = false.obs;
+  RxBool isRotated = false.obs;
 
   Move? previousMove;
 
@@ -70,18 +73,33 @@ class ChessBoardController extends GetxController {
   int noCaptureOrPawnMoves = 0;
   String stateString = "";
   String preCastlingRight = "";
+  String theme = "";
+  String wSquare = "";
+  String bSquare = "";
 
   final sound = AudioPlayer();
 
   @override
-  void onInit() {
+  void onInit() async {
     super.onInit();
-    board.isWhiteToMove = board.initBoard();
-    isAimove = board.aiMove;
-    if (_time != 0) {
+    theme = mode.pieceTheme;
+    wSquare = mode.wSquares;
+    bSquare = mode.bSquares;
+
+    // init board
+    board.isWhiteToMove = board.initBoard(mode.customFen);
+    isAimove = mode.startingSide != GameMode.WhiteSide;
+    isRotated.value = isAimove;
+
+    if (mode.timer != 0) {
       timerController = Get.put(TimerController());
-      timerController.setClock(_time);
+      timerController.setClock(mode.timer);
       isHasTimer = true;
+    }
+
+    if (mode.modeFlags == GameMode.VsAiMode && board.isWhiteToMove == isAimove) {
+      gameTimerManagement();
+      aiMoveGenaration(isAimove, mode.aiDiffcullty);
     }
 
     // Timer.periodic(const Duration(milliseconds: 1000), (timer) {
@@ -142,9 +160,9 @@ class ChessBoardController extends GetxController {
         playSound(ms);
 
         // ai Move
-        if (board.isWhiteToMove == isAimove) {
+        if (mode.modeFlags == GameMode.VsAiMode && board.isWhiteToMove == isAimove) {
           gameTimerManagement();
-          aiMoveGenaration(isAimove, 4);
+          aiMoveGenaration(isAimove, mode.aiDiffcullty);
         }
         isEnableUndo.value = true;
       }
@@ -351,7 +369,7 @@ class ChessBoardController extends GetxController {
     previousMove = Move(-1, -1);
     selectedPieces = Piece.None;
     selectedPos = -1;
-    board.isWhiteToMove = board.resetBoard();
+    board.isWhiteToMove = board.resetBoard(mode.customFen);
     isInCheck.value = false;
     stateHistory.clear();
     moveLogs.clear();
@@ -360,11 +378,14 @@ class ChessBoardController extends GetxController {
     whiteTakenValue.value = 0;
     blackTakenValue.value = 0;
 
-    // isWhiteTurn.value = board.isWhiteToMove;
-    isAimove = !board.isWhiteToMove;
+    if (mode.modeFlags == GameMode.VsAiMode && board.isWhiteToMove == isAimove) {
+      gameTimerManagement();
+      aiMoveGenaration(isAimove, mode.aiDiffcullty);
+    }
+
     count = 0;
     if (isHasTimer) {
-      timerController.setClock(_time);
+      timerController.setClock(mode.timer);
     }
     update();
   }
@@ -398,8 +419,10 @@ class ChessBoardController extends GetxController {
       sound.play(AssetSource(TImages.audioPromote));
 
       update();
+      if (mode.modeFlags == GameMode.VsAiMode) {
+        aiMoveGenaration(isAimove, mode.aiDiffcullty);
+      }
       // after promotion moves
-      aiMoveGenaration(isAimove, 4);
     }
   }
 
@@ -454,5 +477,9 @@ class ChessBoardController extends GetxController {
             ? stateHistory.remove(stateString)
             : stateHistory[stateString] = stateHistory[stateString]! - 1;
     // preCastlingRight = stateString;
+  }
+
+  quarterTurns() {
+    isRotated.value = !isRotated.value;
   }
 }

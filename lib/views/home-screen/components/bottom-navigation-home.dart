@@ -1,8 +1,8 @@
 import 'package:chess_flutter_app/utils/constants/colors.dart';
 import 'package:chess_flutter_app/utils/constants/sizes.dart';
 import 'package:chess_flutter_app/utils/helpers/helper_functions.dart';
-import 'package:chess_flutter_app/views/home-screen/home-view.dart';
-import 'package:chess_flutter_app/views/setting-screen/setting-view.dart';
+import 'package:chess_flutter_app/views/home-screen/home_view.dart';
+import 'package:chess_flutter_app/views/setting-screen/setting_view.dart';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:iconsax/iconsax.dart';
@@ -13,7 +13,7 @@ class NavigationMenuHome extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final controller = Get.put(NavigationController());
-    final dark = THelperFunctions.isDarkMode(context);
+    THelperFunctions.isDarkMode(context);
     return Scaffold(
       bottomNavigationBar: Obx(
         () => NavigationBar(
@@ -67,8 +67,8 @@ class NavigationController extends GetxController {
 
   final screens = [
     const HomeView(),
-    Container(color: Colors.blue),
-    Container(color: Colors.red),
+    Container(color: TColors.backgroundApp),
+    Container(color: TColors.backgroundApp),
     const SettingView(),
   ];
 

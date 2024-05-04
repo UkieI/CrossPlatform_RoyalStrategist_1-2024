@@ -2,7 +2,8 @@ import 'package:chess_flutter_app/logic/board/piece.dart';
 import 'package:chess_flutter_app/utils/constants/colors.dart';
 import 'package:chess_flutter_app/common/widgets/piece/image_chess_piece.dart';
 import 'package:flutter/material.dart';
-
+import 'package:flutter_color_utils/flutter_color_utils.dart';
+// import 'package:flutter_color_util/flutter_color_util.dart';
 import 'package:get/get.dart';
 
 class Square extends StatelessWidget {
@@ -19,6 +20,10 @@ class Square extends StatelessWidget {
     required this.isValidMove,
     this.onTap,
     this.onPlacePosition,
+    required this.isRotated,
+    required this.theme,
+    required this.bSquare,
+    required this.wSquare,
   });
 
   final bool isWhite;
@@ -30,6 +35,11 @@ class Square extends StatelessWidget {
   final bool isCaptured;
   final bool isSelected;
   final bool isValidMove;
+  final int isRotated;
+  final String theme;
+  final String bSquare;
+  final String wSquare;
+
   final void Function()? onTap;
   final void Function(int indexSquare)? onPlacePosition;
   @override
@@ -41,7 +51,7 @@ class Square extends StatelessWidget {
     } else if (isKingIncheck) {
       squareColor = Colors.red;
     } else {
-      squareColor = isWhite ? TColors.wGlassThemeColor : TColors.bGlassThemeColor;
+      squareColor = isWhite ? HexColor('#$wSquare') : HexColor('#$bSquare');
     }
     return GestureDetector(
       onTap: () {
@@ -71,7 +81,12 @@ class Square extends StatelessWidget {
             decoration: accepted.isNotEmpty ? hlBoxDecoration(constraints) : null,
             child: piece != Piece.None
                 ? isWhiteTurn != Piece.isWhite(piece)
-                    ? ImageChessPieceWidget(piece, constraints)
+                    ? ImageChessPieceWidget(
+                        piece,
+                        constraints,
+                        isRotated,
+                        theme: theme,
+                      )
                     : !dragController.isDragging.value || !isSelected
                         ? draggableChessPieces(constraints, dragController)
                         : SizedBox(width: constraints.maxWidth, height: constraints.maxHeight)
@@ -90,12 +105,22 @@ class Square extends StatelessWidget {
         feedback: SizedBox(
           width: constraints.maxWidth,
           height: constraints.maxHeight,
-          child: ImageChessPieceWidget(piece, constraints),
+          child: ImageChessPieceWidget(
+            piece,
+            constraints,
+            isRotated == 2 ? 0 : 2,
+            theme: theme,
+          ),
         ),
         onDragStarted: () => dragController.startDragging(),
         onDragCompleted: () => dragController.endDragging(),
         childWhenDragging: Container(),
-        child: ImageChessPieceWidget(piece, constraints));
+        child: ImageChessPieceWidget(
+          piece,
+          constraints,
+          isRotated,
+          theme: theme,
+        ));
   }
 
   BoxDecoration hlBoxDecoration(BoxConstraints constraints) {

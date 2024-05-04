@@ -26,6 +26,7 @@ class PopUpDialogOptions extends StatelessWidget {
               TextButton(
                 onPressed: () {
                   Navigator.pop(context);
+                  chessController.quarterTurns();
                 },
                 child: Align(
                   alignment: Alignment.centerLeft,

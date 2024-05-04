@@ -9,7 +9,9 @@ class BoardDeadPieces extends StatelessWidget {
   const BoardDeadPieces({
     super.key,
     required this.isWhitePlayer,
+    required this.theme,
   });
+  final String theme;
 
   final bool isWhitePlayer;
 
@@ -46,7 +48,11 @@ class BoardDeadPieces extends StatelessWidget {
               } else {
                 var piece = pieces[index];
                 String key = piece.key;
-                return DeadPieces(piece: Piece.getPieceFromSymbol(key), value: piece.value);
+                return DeadPieces(
+                  piece: Piece.getPieceFromSymbol(key),
+                  value: piece.value,
+                  theme: theme,
+                );
               }
               return null;
             });

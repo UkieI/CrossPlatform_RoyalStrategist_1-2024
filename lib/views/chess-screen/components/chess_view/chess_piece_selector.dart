@@ -8,12 +8,16 @@ class ChessPieceSelector extends StatelessWidget {
   final Function(int) onPieceSelected;
   final bool isWhite;
   final double width;
+  final int isRotated;
+  final String theme;
 
   const ChessPieceSelector({
     super.key,
     required this.onPieceSelected,
     required this.isWhite,
     required this.width,
+    required this.isRotated,
+    required this.theme,
   });
 
   @override
@@ -24,10 +28,10 @@ class ChessPieceSelector extends StatelessWidget {
       // padding: const EdgeInsets.all(20.0),
       child: Column(
         children: [
-          _buildPieceButton(Piece.Queen),
-          _buildPieceButton(Piece.Bishop),
-          _buildPieceButton(Piece.Knight),
-          _buildPieceButton(Piece.Rook),
+          _buildPieceButton(Piece.makePieceIB(Piece.Queen, isWhite)),
+          _buildPieceButton(Piece.makePieceIB(Piece.Bishop, isWhite)),
+          _buildPieceButton(Piece.makePieceIB(Piece.Knight, isWhite)),
+          _buildPieceButton(Piece.makePieceIB(Piece.Rook, isWhite)),
         ],
       ),
     );
@@ -36,8 +40,10 @@ class ChessPieceSelector extends StatelessWidget {
   Widget _buildPieceButton(int piece) {
     return SquarePromotion(
       onTap: () => onPieceSelected(piece),
-      isWhite: Piece.isWhite(piece),
+      isWhite: isWhite,
       piece: piece,
+      isRotated: isRotated,
+      theme: theme,
     );
   }
 }

@@ -1,10 +1,14 @@
+import 'dart:math';
+
 import 'package:chess_flutter_app/common/styles/spacing_style.dart';
+import 'package:chess_flutter_app/model/game_mode.dart';
 import 'package:chess_flutter_app/utils/constants/colors.dart';
 import 'package:chess_flutter_app/utils/constants/sizes.dart';
 import 'package:chess_flutter_app/views/chess-screen/chess_view.dart';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:iconsax/iconsax.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 
 class AiDifficultyView extends StatelessWidget {
   const AiDifficultyView({super.key});
@@ -38,7 +42,34 @@ class AiDifficultyView extends StatelessWidget {
             SizedBox(
               width: double.infinity,
               child: ElevatedButton(
-                onPressed: () => Get.to(const ChessView(setTimer: 0)),
+                onPressed: () async {
+                  SharedPreferences pref = await SharedPreferences.getInstance();
+                  // pref.setString('themePiece', '');
+                  String theme, wSquare = '', bSquare = '';
+                  String? themeString = pref.getString('themePiece');
+                  if (themeString == null) {
+                    // If no theme preference is found, default to 'd' theme and save it
+                    theme = 'd';
+                    await pref.setString('themePiece', 'd');
+                  } else {
+                    theme = themeString;
+                    wSquare = pref.getString('wSquare')!;
+                    bSquare = pref.getString('bSquare')!;
+                  }
+                  GameMode mode = GameMode(
+                    GameMode.VsAiMode,
+                    controller.timer,
+                    controller.bonusTime,
+                    controller.startingSide(),
+                    controller.selectedDifficultyIndex.value + 1,
+                    controller.selectedModeIndex.value,
+                    "",
+                    theme,
+                    wSquare,
+                    bSquare,
+                  );
+                  Get.to(ChessView(mode: mode));
+                },
                 child: Text(
                   'Play!',
                   style: Theme.of(context).textTheme.headlineMedium,
@@ -53,9 +84,11 @@ class AiDifficultyView extends StatelessWidget {
 }
 
 class AiDifficultyController extends GetxController {
-  final Rx<int> selectedDifficultyIndex = 0.obs;
-  final Rx<int> selectedSideIndex = 0.obs;
-  final Rx<int> selectedModeIndex = (-1).obs;
+  Rx<int> selectedDifficultyIndex = 0.obs;
+  Rx<int> selectedSideIndex = 0.obs;
+  Rx<int> selectedModeIndex = (-1).obs;
+  double timer = 0;
+  int bonusTime = 0;
 
   Map<int, String> mapSide = {
     0: "assets/images/neo-wK.png",
@@ -86,6 +119,11 @@ class AiDifficultyController extends GetxController {
   selectMode(int mode) {
     selectedModeIndex.value = mode;
   }
+
+  int startingSide() {
+    if (selectedSideIndex.value == GameMode.RandomSide) return Random().nextInt(2);
+    return selectedSideIndex.value;
+  }
 }
 
 class DiffcultyChooser extends StatelessWidget {
@@ -105,34 +143,37 @@ class DiffcultyChooser extends StatelessWidget {
           Text('AI Difficulty', style: Theme.of(context).textTheme.headlineMedium),
           const SizedBox(height: TSizes.spaceBtwItems),
           Obx(
-            () => Container(
-              height: TSizes.appBarHeight,
-              decoration: BoxDecoration(
-                border: Border.all(width: 2, color: TColors.appBarLowColor),
-                borderRadius: BorderRadius.circular(20),
-              ),
-              child: Row(
-                mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-                children: [
-                  for (int i = 0; i < 6; i++)
-                    Expanded(
-                      child: GestureDetector(
-                        onTap: () => controller.selectDifficulty(i),
-                        child: Container(
-                          decoration: BoxDecoration(
-                            // border: Border.all(width: 1, color: TColors.appBarLowColor),
-                            borderRadius: const BorderRadius.horizontal(left: Radius.circular(15), right: Radius.circular(15)),
-                            color: i == controller.selectedDifficultyIndex.value ? TColors.wNeoThemeColor : null,
-                          ),
-                          alignment: Alignment.center,
-                          child: Text(
-                            (i + 1).toString(),
-                            style: Theme.of(context).textTheme.headlineSmall,
+            () => ClipRRect(
+              borderRadius: BorderRadius.circular(20),
+              child: Container(
+                height: TSizes.appBarHeight,
+                decoration: BoxDecoration(
+                  border: Border.all(width: 2, color: TColors.appBarLowColor),
+                  borderRadius: BorderRadius.circular(20),
+                ),
+                child: Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+                  children: [
+                    for (int i = 0; i < 6; i++)
+                      Expanded(
+                        child: GestureDetector(
+                          onTap: () => controller.selectDifficulty(i),
+                          child: Container(
+                            decoration: BoxDecoration(
+                              // border: Border.all(width: 1, color: TColors.appBarLowColor),
+                              borderRadius: const BorderRadius.horizontal(left: Radius.circular(15), right: Radius.circular(15)),
+                              color: i == controller.selectedDifficultyIndex.value ? TColors.wNeoThemeColor : null,
+                            ),
+                            alignment: Alignment.center,
+                            child: Text(
+                              (i + 1).toString(),
+                              style: Theme.of(context).textTheme.headlineSmall,
+                            ),
                           ),
                         ),
                       ),
-                    ),
-                ],
+                  ],
+                ),
               ),
             ),
           ),

@@ -11,6 +11,7 @@ class PlayerContainer extends StatelessWidget {
     required this.image,
     required this.timer,
     required this.isClock,
+    required this.theme,
   });
 
   final bool isWhite;
@@ -18,6 +19,7 @@ class PlayerContainer extends StatelessWidget {
   final Image image;
   final Widget timer;
   final bool isClock;
+  final String theme;
 
   @override
   Widget build(BuildContext context) {
@@ -44,7 +46,13 @@ class PlayerContainer extends StatelessWidget {
               child: Column(
                 mainAxisAlignment: MainAxisAlignment.center,
                 crossAxisAlignment: CrossAxisAlignment.start,
-                children: [playerName, BoardDeadPieces(isWhitePlayer: isWhite)],
+                children: [
+                  playerName,
+                  BoardDeadPieces(
+                    isWhitePlayer: isWhite,
+                    theme: theme,
+                  )
+                ],
               ),
             ),
             if (isClock) timer,

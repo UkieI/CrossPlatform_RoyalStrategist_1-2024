@@ -1,4 +1,5 @@
 import 'package:chess_flutter_app/controller/chess_board_controller.dart';
+import 'package:chess_flutter_app/model/game_mode.dart';
 import 'package:chess_flutter_app/utils/constants/colors.dart';
 import 'package:chess_flutter_app/utils/constants/sizes.dart';
 
@@ -10,11 +11,12 @@ import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 
 class ChessView extends StatelessWidget {
-  const ChessView({super.key, required this.setTimer});
-  final double setTimer;
+  const ChessView({super.key, required this.mode});
+  // final double setTimer;
+  final GameMode mode;
   @override
   Widget build(BuildContext context) {
-    final chessController = Get.put(ChessBoardController(context, setTimer));
+    final chessController = Get.put(ChessBoardController(context, mode));
     return Scaffold(
       backgroundColor: TColors.backgroundApp,
       appBar: AppBar(
@@ -70,9 +72,9 @@ class ChessView extends StatelessWidget {
               width: TSizes.appBarHeight,
               fit: BoxFit.cover,
             ),
-            isClock: setTimer != 0,
+            isClock: mode.timer != 0, theme: chessController.theme,
           ),
-          const ChessBoard(),
+          ChessBoard(chessController: chessController),
           PlayerContainer(
             timer: Obx(
               () => Container(
@@ -102,7 +104,8 @@ class ChessView extends StatelessWidget {
               width: TSizes.appBarHeight,
               fit: BoxFit.cover,
             ),
-            isClock: setTimer != 0,
+            isClock: mode.timer != 0,
+            theme: chessController.theme,
           ),
         ],
       ),

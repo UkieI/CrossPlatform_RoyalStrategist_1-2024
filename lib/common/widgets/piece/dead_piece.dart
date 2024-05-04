@@ -4,16 +4,22 @@ import 'package:chess_flutter_app/logic/board/piece.dart';
 import 'package:flutter/material.dart';
 
 class DeadPieces extends StatelessWidget {
-  const DeadPieces({super.key, required this.piece, required this.value});
+  const DeadPieces({super.key, required this.piece, required this.value, required this.theme});
 
   final int piece;
+  final String theme;
   final int value;
 
   @override
   Widget build(BuildContext context) {
     return Stack(
       children: [
-        if (piece != Piece.None) SelectPieces(piece: piece),
+        if (piece != Piece.None)
+          SelectPieces(
+            piece: piece,
+            isRotated: 0,
+            theme: theme,
+          ),
         if (value != 1)
           Positioned(
               bottom: 0,
