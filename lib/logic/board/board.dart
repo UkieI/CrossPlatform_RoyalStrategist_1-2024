@@ -82,7 +82,14 @@ class Board {
 }
 
 MoveStack push(Board board, Move move, {int promotionType = Piece.None}) {
-  var ms = MoveStack(move, board.square[move.start], board.square[move.end], -1, board.currentKingCastleRight, board.currentFiftyMoveCounter);
+  var ms = MoveStack(
+    move,
+    movedPiece: board.square[move.start],
+    takenPiece: board.square[move.end],
+    enPassantPos: -1,
+    castlingRights: board.currentKingCastleRight,
+    fiftyMoveCounter: board.currentFiftyMoveCounter,
+  );
   // Get all information
   int startSquare = move.start;
   int targetSquare = move.end;

@@ -22,5 +22,12 @@ class MoveStack {
   static const CastleFlag = 2;
   static const isPromotion = 3;
 
-  MoveStack(this.move, this.movedPiece, this.takenPiece, this.enPassantPos, this.castlingRights, this.fiftyMoveCounter);
+  MoveStack(
+    this.move, {
+    this.movedPiece = Piece.None,
+    this.takenPiece = Piece.None,
+    this.enPassantPos = -1,
+    this.castlingRights = 0,
+    this.fiftyMoveCounter = 0,
+  });
 }

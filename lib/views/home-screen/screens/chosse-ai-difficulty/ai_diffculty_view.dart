@@ -117,7 +117,6 @@ class AiDifficultyController extends GetxController {
   Future<GameMode> initGameBoard() async {
     SharedPreferences pref = await SharedPreferences.getInstance();
     String theme, wSquare = '', bSquare = '';
-    double timer = 0, bonusTime = 0;
     String? themeString = pref.getString('themePiece');
     if (themeString == null) {
       // If no theme preference is found, default to 'd' theme and save it
@@ -129,9 +128,15 @@ class AiDifficultyController extends GetxController {
       bSquare = pref.getString('bSquare')!;
     }
 
-    GameMode mode = GameMode(GameMode.VsAiMode, timer, bonusTime, startingSide(), selectedDifficultyIndex.value + 1, selectedModeIndex.value, "", theme, wSquare, bSquare);
+    GameMode mode = GameMode(
+      modeFlags: GameMode.VsAiMode,
+      pieceTheme: theme,
+      wSquares: wSquare,
+      bSquares: bSquare,
+      aiDiffcullty: selectedDifficultyIndex.value + 1,
+      startingSide: startingSide(),
+    );
 
-    // GameMode mode = GameMode(modeFlags, timer, bonusTime, startingSide, aiDiffcullty, difficultyIndex, customFen, pieceTheme, bSquares, wSquares);
     pref.setInt('aiDifficulty', selectedDifficultyIndex.value);
     return mode;
   }

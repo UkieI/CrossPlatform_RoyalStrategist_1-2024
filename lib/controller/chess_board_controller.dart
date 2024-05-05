@@ -81,6 +81,7 @@ class ChessBoardController extends GetxController {
   @override
   void onInit() async {
     super.onInit();
+
     theme = mode.pieceTheme;
     wSquare = mode.wSquares;
     bSquare = mode.bSquares;
@@ -395,10 +396,6 @@ class ChessBoardController extends GetxController {
     update();
   }
 
-  bool isSelected(int indexSquare) {
-    return selectedPos == indexSquare;
-  }
-
   void pawnPromotion(int piece) {
     if (promotion.value) {
       // disable popUp promotion pawn
@@ -429,6 +426,10 @@ class ChessBoardController extends GetxController {
       }
       // after promotion moves
     }
+  }
+
+  bool isSelected(int indexSquare) {
+    return selectedPos == indexSquare;
   }
 
   bool isPreviousMoved(int squareIndex) {

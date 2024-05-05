@@ -2,6 +2,7 @@ import 'package:chess_flutter_app/model/game_mode.dart';
 import 'package:chess_flutter_app/utils/constants/colors.dart';
 import 'package:chess_flutter_app/utils/constants/sizes.dart';
 import 'package:chess_flutter_app/views/chess-screen/chess_view.dart';
+import 'package:chess_flutter_app/views/home-screen/screens/pass-and-play/custom_view_board_view.dart';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:iconsax/iconsax.dart';
@@ -47,7 +48,7 @@ class PassAndPlayView extends StatelessWidget {
                 padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 20),
                 child: ElevatedButton(
                   onPressed: () async {
-                    GameMode mode = await controller.initGameBoard();
+                    GameMode mode = await controller.initGameBoard(GameMode.PassAndPlayMode);
                     Get.to(ChessView(mode: mode));
                   },
                   child: Text(
@@ -189,8 +190,12 @@ class SettingModePassAndPlay extends StatelessWidget {
                               child: Container(
                                 color: i == controller.indexTypeGame.value ? TColors.wNeoThemeColor : null,
                                 child: OutlinedButton(
-                                  onPressed: () {
+                                  onPressed: () async {
                                     controller.selectedTypeGame(i);
+                                    if (i == 2) {
+                                      GameMode mode = await controller.initGameBoard(GameMode.CustomBoardMode);
+                                      Get.to(ChessCustomView(mode: mode));
+                                    }
                                   },
                                   child: Text(
                                     controller.typeGameString[i]!,
@@ -325,12 +330,14 @@ class PassAndPlayController extends GetxController {
     timeGame.value = timeControlString[index]!;
   }
 
-  Future<GameMode> initGameBoard() async {
+  Future<GameMode> initGameBoard(int modeFlag) async {
     SharedPreferences pref = await SharedPreferences.getInstance();
     // pref.setString('themePiece', '');
     String theme, wSquare = '', bSquare = '';
     double timer = 0, bonusTime = 0;
     var timeString = List.of(timeGame.value.split(" "));
+
+    // Init Timer
     if (timeString.length == 1) {
       timer = 0;
     } else if (timeString.length == 2) {
@@ -340,6 +347,7 @@ class PassAndPlayController extends GetxController {
       bonusTime = double.parse(timeString[2]);
     }
 
+    // initString
     String? themeString = pref.getString('themePiece');
     if (themeString == null) {
       // If no theme preference is found, default to 'd' theme and save it
@@ -351,9 +359,16 @@ class PassAndPlayController extends GetxController {
       bSquare = pref.getString('bSquare')!;
     }
 
-    GameMode mode = GameMode(GameMode.PassAndPlayMode, timer, bonusTime, 0, 0, 0, "", theme, wSquare, bSquare);
+    GameMode mode = GameMode(
+      modeFlags: modeFlag,
+      pieceTheme: theme,
+      wSquares: wSquare,
+      bSquares: bSquare,
+      startingSide: GameMode.WhiteSide,
+      timer: timer,
+      bonusTime: bonusTime,
+    );
 
-    // GameMode mode = GameMode(modeFlags, timer, bonusTime, startingSide, aiDiffcullty, difficultyIndex, customFen, pieceTheme, bSquares, wSquares);
     return mode;
   }
 }

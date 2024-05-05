@@ -18,6 +18,7 @@ class Square extends StatelessWidget {
     required this.isCaptured,
     required this.isSelected,
     required this.isValidMove,
+    required this.isCustomMode,
     this.onTap,
     this.onPlacePosition,
     required this.isRotated,
@@ -35,6 +36,7 @@ class Square extends StatelessWidget {
   final bool isCaptured;
   final bool isSelected;
   final bool isValidMove;
+  final bool isCustomMode;
   final int isRotated;
   final String theme;
   final String bSquare;
@@ -81,7 +83,7 @@ class Square extends StatelessWidget {
         return Container(
             decoration: accepted.isNotEmpty ? hlBoxDecoration(constraints) : null,
             child: piece != Piece.None
-                ? isWhiteTurn != Piece.isWhite(piece)
+                ? isWhiteTurn != Piece.isWhite(piece) && !isCustomMode
                     ? ImageChessPieceWidget(
                         piece,
                         constraints,
@@ -109,7 +111,7 @@ class Square extends StatelessWidget {
           child: ImageChessPieceWidget(
             piece,
             constraints,
-            (isRotated == 0) == Piece.isWhite(piece) ? 0 : 2,
+            0,
             theme: theme,
           ),
         ),
