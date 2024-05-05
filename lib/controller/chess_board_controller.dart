@@ -17,7 +17,6 @@ import 'package:chess_flutter_app/utils/constants/image_strings.dart';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:audioplayers/audioplayers.dart';
-import 'package:shared_preferences/shared_preferences.dart';
 
 // ignore: constant_identifier_names
 const TIMER_ACCURACY_MS = 100;
@@ -94,6 +93,7 @@ class ChessBoardController extends GetxController {
     if (mode.timer != 0) {
       timerController = Get.put(TimerController());
       timerController.setClock(mode.timer);
+      timerController.bonusTime = mode.bonusTime;
       isHasTimer = true;
     }
 
@@ -145,6 +145,7 @@ class ChessBoardController extends GetxController {
       var ms = push(board, Move(selectedPos, indexSquare));
       updateBoard(selectedPos, indexSquare);
       makeCapturePiece(ms.takenPiece);
+      gameTimerManagement();
       if (isPromotion(board.square[previousMove!.end], previousMove!.end)) {
         promotion.value = true;
 
@@ -164,6 +165,7 @@ class ChessBoardController extends GetxController {
           gameTimerManagement();
           aiMoveGenaration(isAimove, mode.aiDiffcullty);
         }
+
         isEnableUndo.value = true;
       }
       board.redoStack.clear();
@@ -197,11 +199,12 @@ class ChessBoardController extends GetxController {
     }
   }
 
-  void aiMoveGenaration(bool isAiMove, int depth) async {
+  Future<Move?> aiMoveGenaration(bool isAiMove, int depth) async {
     await Future.delayed(const Duration(milliseconds: 100));
+
     if (!isGameOver) {
       try {
-        var move = calculateAIMove(board, depth, isAiMove);
+        Move move = calculateAIMove(board, depth, isAiMove);
         var ms = push(board, move, promotionType: move.promotionType);
         makeCapturePiece(ms.takenPiece);
         updateStateString(board.square, isAiMove, ms);
@@ -213,9 +216,11 @@ class ChessBoardController extends GetxController {
         moveLogs.add(moveLogString(ms, isAnyMoveLeft, isInCheck.value));
 
         playSound(ms);
+        return move;
         // ignore: empty_catches
       } catch (e) {}
     }
+    return null;
   }
 
   void playSound(MoveStack ms) {
@@ -230,7 +235,7 @@ class ChessBoardController extends GetxController {
 
   void gameTimerManagement() {
     if (isHasTimer) {
-      if (board.isWhiteToMove) {
+      if (!board.isWhiteToMove) {
         timerController.stopWhiteTimer();
         timerController.startBlackTimer(_context, isGameOver);
       } else {

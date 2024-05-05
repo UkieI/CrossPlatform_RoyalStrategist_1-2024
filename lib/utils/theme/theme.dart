@@ -4,7 +4,6 @@ import 'package:chess_flutter_app/utils/theme/widget_themes/checkbox_theme.dart'
 import 'package:chess_flutter_app/utils/theme/widget_themes/chip_theme.dart';
 import 'package:chess_flutter_app/utils/theme/widget_themes/elevated_button_theme.dart';
 import 'package:chess_flutter_app/utils/theme/widget_themes/outlined_button_theme.dart';
-import 'package:chess_flutter_app/utils/theme/widget_themes/text_field_theme.dart';
 import 'package:chess_flutter_app/utils/theme/widget_themes/text_theme.dart';
 import 'package:flutter/material.dart';
 
@@ -27,7 +26,7 @@ class TAppTheme {
     bottomSheetTheme: TBottomSheetTheme.lightBottomSheetTheme,
     elevatedButtonTheme: TElevatedButtonTheme.lightElevatedButtonTheme,
     outlinedButtonTheme: TOutlinedButtonTheme.lightOutlinedButtonTheme,
-    inputDecorationTheme: TTextFormFieldTheme.lightInputDecorationTheme,
+    // inputDecorationTheme: TTextFormFieldTheme.lightInputDecorationTheme,
   );
 
   static ThemeData darkTheme = ThemeData(
@@ -44,6 +43,6 @@ class TAppTheme {
     bottomSheetTheme: TBottomSheetTheme.darkBottomSheetTheme,
     elevatedButtonTheme: TElevatedButtonTheme.darkElevatedButtonTheme,
     outlinedButtonTheme: TOutlinedButtonTheme.darkOutlinedButtonTheme,
-    inputDecorationTheme: TTextFormFieldTheme.darkInputDecorationTheme,
+    // inputDecorationTheme: TTextFormFieldTheme.darkInputDecorationTheme,
   );
 }

@@ -12,7 +12,7 @@ class GameMode {
 
   // timer
   double timer = 0;
-  int bonusTime = 0;
+  double bonusTime = 0;
 
   // starting side
   int startingSide = 0; //  0 : white, 1 : black , 2 : random

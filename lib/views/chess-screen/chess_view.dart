@@ -42,22 +42,22 @@ class ChessView extends StatelessWidget {
           const MoveLogContainer(),
           // Player 1
           PlayerContainer(
-            timer: Obx(
-              () => Container(
-                height: 40,
-                width: 100,
-                decoration: const BoxDecoration(
-                  borderRadius: BorderRadius.all(Radius.circular(TSizes.sm)),
-                  color: Colors.white,
+            timer: Container(
+              height: 40,
+              width: 100,
+              decoration: const BoxDecoration(
+                borderRadius: BorderRadius.all(Radius.circular(TSizes.sm)),
+                color: Colors.white,
+              ),
+              child: Center(
+                child: Obx(
+                  () => Text(
+                    chessController.timerController.timesBlack.value,
+                    style: const TextStyle(fontSize: 16, color: Colors.black),
+                  ),
                 ),
-                child: Center(
-                    child: Text(
-                  chessController.timerController.timesBlack.value,
-                  style: const TextStyle(fontSize: 16, color: Colors.black),
-                )),
               ),
             ),
-
             // timerController: chessController.timerController,
             playerName: const Text(
               "Player 1",
@@ -76,27 +76,25 @@ class ChessView extends StatelessWidget {
           ),
           ChessBoard(chessController: chessController),
           PlayerContainer(
-            timer: Obx(
-              () => Container(
-                height: 40,
-                width: 100,
-                decoration: const BoxDecoration(
-                  borderRadius: BorderRadius.all(Radius.circular(TSizes.sm)),
-                  color: Colors.white,
+            timer: Container(
+              height: 40,
+              width: 100,
+              decoration: const BoxDecoration(
+                borderRadius: BorderRadius.all(Radius.circular(TSizes.sm)),
+                color: Colors.white,
+              ),
+              child: Center(
+                child: Obx(
+                  () => Text(
+                    chessController.timerController.timesWhite.value,
+                    style: const TextStyle(fontSize: 16, color: Colors.black),
+                  ),
                 ),
-                child: Center(
-                    child: Text(
-                  chessController.timerController.timesWhite.value,
-                  style: const TextStyle(fontSize: 16, color: Colors.black),
-                )),
               ),
             ),
             playerName: const Text(
               "Player 2",
-              style: TextStyle(
-                color: Colors.white,
-                fontSize: 20,
-              ),
+              style: TextStyle(color: Colors.white, fontSize: 20),
             ),
             isWhite: true,
             image: Image.asset(

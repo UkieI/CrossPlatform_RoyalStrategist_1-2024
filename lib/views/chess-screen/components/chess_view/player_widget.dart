@@ -24,40 +24,44 @@ class PlayerContainer extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Expanded(
-      child: Padding(
-        padding: const EdgeInsets.symmetric(vertical: 10, horizontal: 35),
-        child: Row(
-          mainAxisAlignment: MainAxisAlignment.start,
-          children: [
-            // Image Player 2
-            Container(
-              decoration: BoxDecoration(
-                border: Border.all(
-                  width: 2,
-                  color: TColors.dragTargetColors,
+      // color: isWhite ? Colors.red : Colors.amber,
+      child: Row(
+        mainAxisAlignment: MainAxisAlignment.center,
+        crossAxisAlignment: CrossAxisAlignment.center,
+        children: [
+          // Image Player 2
+          const SizedBox(width: TSizes.iconXs),
+          Container(
+            decoration: BoxDecoration(
+              border: Border.all(
+                width: 2,
+                color: TColors.dragTargetColors,
+              ),
+            ),
+            child: image,
+          ),
+          const SizedBox(width: TSizes.sm),
+          // const SizedBox(width: TSizes.defaultSpace / 2),
+          // Name Player
+          Expanded(
+            child: Column(
+              mainAxisAlignment: MainAxisAlignment.center,
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                const SizedBox(height: TSizes.md),
+                Padding(
+                  padding: const EdgeInsets.only(left: 10),
+                  child: playerName,
                 ),
-              ),
-              child: image,
+                Center(child: BoardDeadPieces(isWhitePlayer: isWhite, theme: theme)),
+              ],
             ),
-
-            const SizedBox(width: TSizes.defaultSpace / 2),
-            // // Name Player
-            Expanded(
-              child: Column(
-                mainAxisAlignment: MainAxisAlignment.center,
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  playerName,
-                  BoardDeadPieces(
-                    isWhitePlayer: isWhite,
-                    theme: theme,
-                  )
-                ],
-              ),
-            ),
-            if (isClock) timer,
-          ],
-        ),
+          ),
+          const SizedBox(width: TSizes.sm),
+          if (isClock) timer,
+          if (!isClock) const SizedBox(height: 40, width: 100),
+          const SizedBox(width: TSizes.iconXs),
+        ],
       ),
     );
   }

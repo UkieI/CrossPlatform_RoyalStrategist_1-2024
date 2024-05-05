@@ -2,6 +2,7 @@
 import 'package:chess_flutter_app/common/styles/spacing_style.dart';
 import 'package:chess_flutter_app/utils/constants/sizes.dart';
 import 'package:chess_flutter_app/views/home-screen/screens/chosse-ai-difficulty/ai_diffculty_view.dart';
+import 'package:chess_flutter_app/views/home-screen/screens/pass-and-play/pass_and_play_view.dart';
 
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
@@ -84,7 +85,7 @@ class HomeView extends StatelessWidget {
                   SizedBox(
                     width: double.infinity,
                     child: OutlinedButton(
-                      onPressed: () {},
+                      onPressed: () => Get.to(const PassAndPlayView()),
                       child: Row(
                         mainAxisAlignment: MainAxisAlignment.center,
                         // crossAxisAlignment: CrossAxisAlignment.center,

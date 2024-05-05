@@ -9,8 +9,12 @@ class TimerController extends GetxController {
   double timerBlackTime = 0.0;
   RxString timesWhite = '00.00'.obs;
   RxString timesBlack = '00.00'.obs;
+  double bonusTime = 0;
   Timer? _timerWhite;
   Timer? _timerBlack;
+
+  Duration player1TimeLeft = Duration.zero;
+  Duration player2TimeLeft = Duration.zero;
 
   void setStringTime(RxString timerString, double timerCountdown) {
     int minutes = timerCountdown ~/ 60;
@@ -19,13 +23,11 @@ class TimerController extends GetxController {
     double decimalPart = timerCountdown - timerCountdown.truncate();
 
     int decimalDigit = (decimalPart * 10).truncate();
-    if (decimalDigit == 0 && timerCountdown > 20.0) {
-      timerString.value =
-          "${minutes.toString().padLeft(1, "0")}:${seconds.toString().padLeft(2, "0")}";
+    if (timerCountdown > 20.0) {
+      timerString.value = "${minutes.toString().padLeft(1, "0")}:${seconds.toString().padLeft(2, "0")}";
     }
     if (timerWhiteTime < 20.0) {
-      timerString.value =
-          "${minutes.toString().padLeft(1, "0")}:${seconds.toString().padLeft(2, "0")}.${decimalDigit.toString()}";
+      timerString.value = "${minutes.toString().padLeft(1, "0")}:${seconds.toString().padLeft(2, "0")}.${decimalDigit.toString()}";
     }
     // timerCountdown.value -= 0.1;
   }
@@ -35,37 +37,12 @@ class TimerController extends GetxController {
     timerBlackTime = time;
     int minutes = timerWhiteTime ~/ 60;
     int seconds = (timerWhiteTime % 60).toInt();
-    timesWhite.value =
-        "${minutes.toString().padLeft(2, "0")}:${seconds.toString().padLeft(2, "0")}";
+    timesWhite.value = "${minutes.toString().padLeft(2, "0")}:${seconds.toString().padLeft(2, "0")}";
 
     minutes = timerBlackTime ~/ 60;
     seconds = (timerBlackTime % 60).toInt();
-    timesBlack.value =
-        "${minutes.toString().padLeft(2, "0")}:${seconds.toString().padLeft(2, "0")}";
-
-    stopWhiteTimer();
-    stopBlackTimer();
+    timesBlack.value = "${minutes.toString().padLeft(2, "0")}:${seconds.toString().padLeft(2, "0")}";
   }
-
-  // void startTimer(BuildContext context, bool isWhiteTurn) {
-  //   _timer = Timer.periodic(const Duration(milliseconds: 100), (timer) {
-  //     if (isWhiteTurn) {
-  //       setStringTime(timesWhite, timerWhiteTime);
-  //       timerWhiteTime -= 0.1;
-  //     } else {
-  //       setStringTime(timesBlack, timerBlackTime);
-  //       timerBlackTime -= 0.1;
-  //     }
-  //     if (isZero(timerWhiteTime)) {
-  //       timer.cancel();
-  //       showDiaLog(context, false);
-  //     }
-  //     if (isZero(timerBlackTime)) {
-  //       timer.cancel();
-  //       showDiaLog(context, true);
-  //     }
-  //   });
-  // }
 
   // Khởi động đồng hồ đếm ngược
   void startWhiteTimer(BuildContext context, bool isOver) {
@@ -102,6 +79,8 @@ class TimerController extends GetxController {
   }
 
   void showDiaLog(BuildContext context, bool isWhite) {
+    timerBlackTime += bonusTime;
+    setStringTime(timesBlack, timerBlackTime);
     showDialog(
       context: context,
       builder: (context) => AlertDialog(
@@ -114,20 +93,25 @@ class TimerController extends GetxController {
   // Dừng đồng hồ đếm ngược
   void stopWhiteTimer() {
     _timerWhite?.cancel();
+    timerWhiteTime += bonusTime;
+    setStringTime(timesWhite, timerWhiteTime);
+
     // isWhiteRun = false;
   }
 
   void stopBlackTimer() {
     _timerBlack?.cancel();
+    timerBlackTime += bonusTime;
+    setStringTime(timesBlack, timerBlackTime);
     // isBlackRun = false;
   }
 
   // Thiết lập lại đồng hồ đếm ngược
-  void resetTimer(double value) {
-    stopWhiteTimer();
-    stopBlackTimer();
-    // stopTimer();
-    timerWhiteTime = value;
-    timerBlackTime = value;
-  }
+  // void resetTimer(double value) {
+  //   stopWhiteTimer();
+  //   stopBlackTimer();
+  //   // stopTimer();
+  //   timerWhiteTime = value;
+  //   timerBlackTime = value;
+  // }
 }

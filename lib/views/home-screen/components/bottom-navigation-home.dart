@@ -1,3 +1,5 @@
+// ignore_for_file: file_names
+
 import 'package:chess_flutter_app/utils/constants/colors.dart';
 import 'package:chess_flutter_app/utils/constants/sizes.dart';
 import 'package:chess_flutter_app/utils/helpers/helper_functions.dart';

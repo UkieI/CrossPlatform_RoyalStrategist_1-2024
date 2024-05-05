@@ -67,6 +67,7 @@ class Square extends StatelessWidget {
             dragTargetChessPieces(constraints, dragController),
             rowAndColumnName(),
             if (indexSquare == 56) columnNamePositon('a'),
+            if (indexSquare == 7 && isRotated == 2) columnNamePositon('8'),
           ]);
         }),
       ),
@@ -108,7 +109,7 @@ class Square extends StatelessWidget {
           child: ImageChessPieceWidget(
             piece,
             constraints,
-            isRotated == 2 ? 0 : 2,
+            (isRotated == 0) == Piece.isWhite(piece) ? 0 : 2,
             theme: theme,
           ),
         ),
@@ -156,72 +157,73 @@ class Square extends StatelessWidget {
   }
 
   Widget rowAndColumnName() {
-    switch (indexSquare) {
-      case 0:
-        return rowNamePositon(8.toString());
-      case 8:
-        return rowNamePositon(7.toString());
-      case 16:
-        return rowNamePositon(6.toString());
-      case 24:
-        return rowNamePositon(5.toString());
-      case 32:
-        return rowNamePositon(4.toString());
-      case 40:
-        return rowNamePositon(3.toString());
-      case 48:
-        return rowNamePositon(2.toString());
-      case 56:
-        return rowNamePositon(1.toString());
-      case 57:
-        return columnNamePositon('b');
-      case 58:
-        return columnNamePositon('c');
-      case 59:
-        return columnNamePositon('d');
-      case 60:
-        return columnNamePositon('e');
-      case 61:
-        return columnNamePositon('f');
-      case 62:
-        return columnNamePositon('g');
-      case 63:
-        return columnNamePositon('h');
+    if (isRotated == 0) {
+      switch (indexSquare) {
+        case 0:
+          return rowNamePositon(8.toString());
+        case 8:
+          return rowNamePositon(7.toString());
+        case 16:
+          return rowNamePositon(6.toString());
+        case 24:
+          return rowNamePositon(5.toString());
+        case 32:
+          return rowNamePositon(4.toString());
+        case 40:
+          return rowNamePositon(3.toString());
+        case 48:
+          return rowNamePositon(2.toString());
+        case 56:
+          return rowNamePositon(1.toString());
+        case 57:
+          return columnNamePositon('b');
+        case 58:
+          return columnNamePositon('c');
+        case 59:
+          return columnNamePositon('d');
+        case 60:
+          return columnNamePositon('e');
+        case 61:
+          return columnNamePositon('f');
+        case 62:
+          return columnNamePositon('g');
+        case 63:
+          return columnNamePositon('h');
+      }
+    } else {
+      switch (indexSquare) {
+        case 0:
+          return rowNamePositon('a');
+        case 1:
+          return rowNamePositon('b');
+        case 2:
+          return rowNamePositon('c');
+        case 3:
+          return rowNamePositon('d');
+        case 4:
+          return rowNamePositon('e');
+        case 5:
+          return rowNamePositon('f');
+        case 6:
+          return rowNamePositon('g');
+        case 7:
+          return rowNamePositon('h');
+        case 15:
+          return columnNamePositon(7.toString());
+        case 23:
+          return columnNamePositon(6.toString());
+        case 31:
+          return columnNamePositon(5.toString());
+        case 39:
+          return columnNamePositon(4.toString());
+        case 47:
+          return columnNamePositon(3.toString());
+        case 55:
+          return columnNamePositon(2.toString());
+        case 63:
+          return columnNamePositon(1.toString());
+      }
     }
-    // } else {
-    //   switch (position) {
-    //     case 0:
-    //       return rowNamePositon('a');
-    //     case 1:
-    //       return rowNamePositon('b');
-    //     case 2:
-    //       return rowNamePositon('c');
-    //     case 3:
-    //       return rowNamePositon('d');
-    //     case 4:
-    //       return rowNamePositon('e');
-    //     case 5:
-    //       return rowNamePositon('f');
-    //     case 6:
-    //       return rowNamePositon('g');
-    //     case 7:
-    //       return rowNamePositon('h');
-    //     case 15:
-    //       return columnNamePositon(7.toString());
-    //     case 23:
-    //       return columnNamePositon(6.toString());
-    //     case 31:
-    //       return columnNamePositon(5.toString());
-    //     case 39:
-    //       return columnNamePositon(4.toString());
-    //     case 47:
-    //       return columnNamePositon(3.toString());
-    //     case 55:
-    //       return columnNamePositon(2.toString());
-    //     case 63:
-    //       return columnNamePositon(1.toString());
-    //   }
-    // }
     return const SizedBox.shrink();
   }
 
@@ -229,12 +231,15 @@ class Square extends StatelessWidget {
     return Positioned(
       top: 1,
       left: 2,
-      child: Text(
-        text,
-        style: TextStyle(
-          fontSize: 11,
-          fontWeight: FontWeight.w900,
-          color: !isWhite ? TColors.fgGreenThemeColor : TColors.fgGreenThemeColor,
+      child: RotatedBox(
+        quarterTurns: isRotated,
+        child: Text(
+          text,
+          style: TextStyle(
+            fontSize: 11,
+            fontWeight: FontWeight.w900,
+            color: !isWhite ? TColors.fgGreenThemeColor : TColors.fgGreenThemeColor,
+          ),
         ),
       ),
     );
@@ -244,12 +249,15 @@ class Square extends StatelessWidget {
     return Positioned(
       bottom: 1,
       right: 3,
-      child: Text(
-        text,
-        style: TextStyle(
-          fontSize: 11,
-          fontWeight: FontWeight.w900,
-          color: !isWhite ? TColors.fgGreenThemeColor : TColors.fgGreenThemeColor,
+      child: RotatedBox(
+        quarterTurns: isRotated,
+        child: Text(
+          text,
+          style: TextStyle(
+            fontSize: 11,
+            fontWeight: FontWeight.w900,
+            color: !isWhite ? TColors.fgGreenThemeColor : TColors.fgGreenThemeColor,
+          ),
         ),
       ),
     );

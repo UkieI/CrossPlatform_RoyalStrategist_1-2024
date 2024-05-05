@@ -17,46 +17,47 @@ class BoardDeadPieces extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return SizedBox(
-      width: 300,
-      height: 40,
-      child: GetBuilder<ChessBoardController>(builder: (controller) {
-        var pieceTakens = controller.piecesTaken.entries.toList();
-        var pieces = pieceTakens.where((element) => (element.key == element.key.toUpperCase()) == isWhitePlayer).toList();
-        pieces.sort((a, b) {
-          var aValue = Piece.pieceValue(Piece.getPieceTypeFromSymbol(a.key));
-          var bValue = Piece.pieceValue(Piece.getPieceTypeFromSymbol(b.key));
-          return aValue.compareTo(bValue);
-        });
-        int length = pieces.length;
+    return Expanded(
+      child: SizedBox(
+        height: 50,
+        child: GetBuilder<ChessBoardController>(builder: (controller) {
+          var pieceTakens = controller.piecesTaken.entries.toList();
+          var pieces = pieceTakens.where((element) => (element.key == element.key.toUpperCase()) == isWhitePlayer).toList();
+          pieces.sort((a, b) {
+            var aValue = Piece.pieceValue(Piece.getPieceTypeFromSymbol(a.key));
+            var bValue = Piece.pieceValue(Piece.getPieceTypeFromSymbol(b.key));
+            return aValue.compareTo(bValue);
+          });
+          int length = pieces.length;
 
-        return GridView.builder(
-            itemCount: length + 1,
-            gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(crossAxisCount: 8),
-            itemBuilder: (context, index) {
-              if (index == length) {
-                var point = controller.whiteTakenValue.value - controller.blackTakenValue.value;
-                if (point == 0) {
-                  return const SizedBox.shrink();
+          return GridView.builder(
+              itemCount: length + 1,
+              gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(crossAxisCount: 6),
+              itemBuilder: (context, index) {
+                if (index == length) {
+                  var point = controller.whiteTakenValue.value - controller.blackTakenValue.value;
+                  if (point == 0) {
+                    return const SizedBox.shrink();
+                  }
+                  if (point > 0) {
+                    return isWhitePlayer ? Center(child: Text("+${point.abs().toString()}", style: const TextStyle(color: Colors.white70))) : const SizedBox.shrink();
+                  }
+                  if (point < 0) {
+                    return !isWhitePlayer ? Center(child: Text("+${point.abs().toString()}", style: const TextStyle(color: Colors.white70))) : const SizedBox.shrink();
+                  }
+                } else {
+                  var piece = pieces[index];
+                  String key = piece.key;
+                  return DeadPieces(
+                    piece: Piece.getPieceFromSymbol(key),
+                    value: piece.value,
+                    theme: theme,
+                  );
                 }
-                if (point > 0) {
-                  return isWhitePlayer ? Center(child: Text("+${point.abs().toString()}", style: const TextStyle(color: Colors.white70))) : const SizedBox.shrink();
-                }
-                if (point < 0) {
-                  return !isWhitePlayer ? Center(child: Text("+${point.abs().toString()}", style: const TextStyle(color: Colors.white70))) : const SizedBox.shrink();
-                }
-              } else {
-                var piece = pieces[index];
-                String key = piece.key;
-                return DeadPieces(
-                  piece: Piece.getPieceFromSymbol(key),
-                  value: piece.value,
-                  theme: theme,
-                );
-              }
-              return null;
-            });
-      }),
+                return null;
+              });
+        }),
+      ),
     );
   }
 }

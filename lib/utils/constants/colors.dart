@@ -9,6 +9,7 @@ class TColors {
   static const Color foregroundColor = Color(0xFFBDBDBD);
 
   static const Color backgroundColor1 = Color(0xFF302e2b);
+  static const Color backgroundButtonColor = Color(0xFF1c1b1f);
 
   static const Color appBarSelectColor = Color(0xFF7f985a);
   static const Color appBarLowColor = Color(0xFFa8afce);

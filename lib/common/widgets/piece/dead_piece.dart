@@ -15,10 +15,12 @@ class DeadPieces extends StatelessWidget {
     return Stack(
       children: [
         if (piece != Piece.None)
-          SelectPieces(
-            piece: piece,
-            isRotated: 0,
-            theme: theme,
+          Expanded(
+            child: SelectPieces(
+              piece: piece,
+              isRotated: 0,
+              theme: theme,
+            ),
           ),
         if (value != 1)
           Positioned(

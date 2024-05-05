@@ -26,7 +26,7 @@ class Evaluation {
     whiteEval.mopUpScore = mopUpEval(true, whitePieces, blackPieces);
     blackEval.mopUpScore = mopUpEval(false, blackPieces, whitePieces);
 
-    // int perspective = board.isWhiteToMove != board.aiMove ? 1 : -1;
+    // int perspective = board.isWhiteToMove ? 1 : -1;
     int eval = whiteEval.sum() - blackEval.sum();
 
     return eval;

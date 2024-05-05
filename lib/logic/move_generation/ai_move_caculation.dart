@@ -70,8 +70,6 @@ MoveAndValue _alphaBeta(Board board, Move move, int depth, int maxDepth, int alp
     }
   }
 
-
-
   return bestMove;
 }
 
@@ -86,7 +84,7 @@ Move openingMove(Board board, bool isAiMove, int detph) {
     move = possibleMoves.first;
 
     push(board, move);
-    var result = _alphaBeta(board, move, 0, 1, INITIAL_ALPHA, INITIAL_BETA);
+    var result = _alphaBeta(board, move, 0, 2, INITIAL_ALPHA, INITIAL_BETA);
     result.move = move;
     pop(board);
 

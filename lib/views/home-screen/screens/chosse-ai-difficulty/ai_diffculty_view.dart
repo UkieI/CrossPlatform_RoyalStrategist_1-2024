@@ -43,31 +43,7 @@ class AiDifficultyView extends StatelessWidget {
               width: double.infinity,
               child: ElevatedButton(
                 onPressed: () async {
-                  SharedPreferences pref = await SharedPreferences.getInstance();
-                  // pref.setString('themePiece', '');
-                  String theme, wSquare = '', bSquare = '';
-                  String? themeString = pref.getString('themePiece');
-                  if (themeString == null) {
-                    // If no theme preference is found, default to 'd' theme and save it
-                    theme = 'd';
-                    await pref.setString('themePiece', 'd');
-                  } else {
-                    theme = themeString;
-                    wSquare = pref.getString('wSquare')!;
-                    bSquare = pref.getString('bSquare')!;
-                  }
-                  GameMode mode = GameMode(
-                    GameMode.VsAiMode,
-                    controller.timer,
-                    controller.bonusTime,
-                    controller.startingSide(),
-                    controller.selectedDifficultyIndex.value + 1,
-                    controller.selectedModeIndex.value,
-                    "",
-                    theme,
-                    wSquare,
-                    bSquare,
-                  );
+                  GameMode mode = await controller.initGameBoard();
                   Get.to(ChessView(mode: mode));
                 },
                 child: Text(
@@ -88,7 +64,20 @@ class AiDifficultyController extends GetxController {
   Rx<int> selectedSideIndex = 0.obs;
   Rx<int> selectedModeIndex = (-1).obs;
   double timer = 0;
-  int bonusTime = 0;
+  double bonusTime = 0;
+
+  @override
+  void onInit() async {
+    super.onInit();
+    SharedPreferences pref = await SharedPreferences.getInstance();
+    int? aiDiff = pref.getInt('aiDifficulty');
+    if (aiDiff == null) {
+      // If no theme preference is found, default to 'd' theme and save it
+      pref.setInt('aiDifficulty', 0);
+    } else {
+      selectedDifficultyIndex.value = aiDiff;
+    }
+  }
 
   Map<int, String> mapSide = {
     0: "assets/images/neo-wK.png",
@@ -123,6 +112,28 @@ class AiDifficultyController extends GetxController {
   int startingSide() {
     if (selectedSideIndex.value == GameMode.RandomSide) return Random().nextInt(2);
     return selectedSideIndex.value;
+  }
+
+  Future<GameMode> initGameBoard() async {
+    SharedPreferences pref = await SharedPreferences.getInstance();
+    String theme, wSquare = '', bSquare = '';
+    double timer = 0, bonusTime = 0;
+    String? themeString = pref.getString('themePiece');
+    if (themeString == null) {
+      // If no theme preference is found, default to 'd' theme and save it
+      theme = 'd';
+      await pref.setString('themePiece', 'd');
+    } else {
+      theme = themeString;
+      wSquare = pref.getString('wSquare')!;
+      bSquare = pref.getString('bSquare')!;
+    }
+
+    GameMode mode = GameMode(GameMode.VsAiMode, timer, bonusTime, startingSide(), selectedDifficultyIndex.value + 1, selectedModeIndex.value, "", theme, wSquare, bSquare);
+
+    // GameMode mode = GameMode(modeFlags, timer, bonusTime, startingSide, aiDiffcullty, difficultyIndex, customFen, pieceTheme, bSquares, wSquares);
+    pref.setInt('aiDifficulty', selectedDifficultyIndex.value);
+    return mode;
   }
 }
 
