@@ -105,16 +105,16 @@ class HomeView extends StatelessWidget {
                   const SizedBox(height: TSizes.spaceBtwSections * 2),
 
                   // Start Game Button
-                  SizedBox(
-                    width: double.infinity,
-                    child: ElevatedButton(
-                      onPressed: () {},
-                      child: Text(
-                        'Start Game',
-                        style: Theme.of(context).textTheme.headlineSmall,
-                      ),
-                    ),
-                  ),
+                  // SizedBox(
+                  //   width: double.infinity,
+                  //   child: ElevatedButton(
+                  //     onPressed: () {},
+                  //     child: Text(
+                  //       'Start Game',
+                  //       style: Theme.of(context).textTheme.headlineSmall,
+                  //     ),
+                  //   ),
+                  // ),
                 ],
               ),
             ),
