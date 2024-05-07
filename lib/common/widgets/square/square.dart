@@ -1,4 +1,5 @@
 import 'package:chess_flutter_app/logic/board/piece.dart';
+import 'package:chess_flutter_app/logic/helpers/board_helpers.dart';
 import 'package:chess_flutter_app/utils/constants/colors.dart';
 import 'package:chess_flutter_app/common/widgets/piece/image_chess_piece.dart';
 import 'package:flutter/material.dart';
@@ -9,7 +10,7 @@ import 'package:get/get.dart';
 class Square extends StatelessWidget {
   const Square({
     super.key,
-    required this.isWhite,
+    required this.squareColor,
     required this.piece,
     required this.indexSquare,
     required this.isWhiteTurn,
@@ -27,7 +28,7 @@ class Square extends StatelessWidget {
     required this.wSquare,
   });
 
-  final bool isWhite;
+  final bool squareColor;
   final int piece;
   final int indexSquare;
   final bool isKingIncheck;
@@ -47,14 +48,17 @@ class Square extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final dragController = Get.put(DragController());
-    Color? squareColor;
-    if (isSelected || previousMoved) {
-      squareColor = TColors.highLightThemeColors;
+    Color? colorS;
+    if ((isSelected) || previousMoved) {
+      colorS = TColors.highLightThemeColors;
+    } else if (!BoardHelper.isInBoard(indexSquare)) {
+      colorS = TColors.backgroundApp;
     } else if (isKingIncheck) {
-      squareColor = Colors.red;
+      colorS = Colors.red;
     } else {
-      squareColor = isWhite ? HexColor('#$wSquare') : HexColor('#$bSquare');
+      colorS = squareColor ? HexColor('#$wSquare') : HexColor('#$bSquare');
     }
+
     return GestureDetector(
       onTap: () {
         onTap;
@@ -62,7 +66,7 @@ class Square extends StatelessWidget {
       },
       onPanCancel: onTap,
       child: Container(
-        color: squareColor,
+        color: colorS,
         child: LayoutBuilder(builder: (context, constraints) {
           return Stack(children: [
             if (isValidMove) !isCaptured ? hintDot(constraints) : hintCapture(constraints),
@@ -81,7 +85,7 @@ class Square extends StatelessWidget {
       onAcceptWithDetails: (details) => onPlacePosition!(indexSquare),
       builder: (BuildContext context, List<dynamic> accepted, List<dynamic> rejected) {
         return Container(
-            decoration: accepted.isNotEmpty ? hlBoxDecoration(constraints) : null,
+            decoration: accepted.isNotEmpty && BoardHelper.isInBoard(indexSquare) ? hlBoxDecoration(constraints) : null,
             child: piece != Piece.None
                 ? isWhiteTurn != Piece.isWhite(piece) && !isCustomMode
                     ? ImageChessPieceWidget(
@@ -240,7 +244,7 @@ class Square extends StatelessWidget {
           style: TextStyle(
             fontSize: 11,
             fontWeight: FontWeight.w900,
-            color: !isWhite ? TColors.fgGreenThemeColor : TColors.fgGreenThemeColor,
+            color: !squareColor ? TColors.fgGreenThemeColor : TColors.fgGreenThemeColor,
           ),
         ),
       ),
@@ -258,7 +262,7 @@ class Square extends StatelessWidget {
           style: TextStyle(
             fontSize: 11,
             fontWeight: FontWeight.w900,
-            color: !isWhite ? TColors.fgGreenThemeColor : TColors.fgGreenThemeColor,
+            color: !squareColor ? TColors.fgGreenThemeColor : TColors.fgGreenThemeColor,
           ),
         ),
       ),

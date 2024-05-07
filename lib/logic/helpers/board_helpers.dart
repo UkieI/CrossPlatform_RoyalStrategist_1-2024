@@ -7,6 +7,7 @@ import 'package:chess_flutter_app/utils/helpers/chess_functions.dart';
 
 class BoardHelper {
   static const INIT_FEN = "rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 0";
+  static const EMPTY_FEN = "8/8/8/8/8/8/8/8 w - - 0 1";
   static const TEST_FEN_IM_KNvK = "8/8/8/2k1N3/8/8/2Kp4/8 b - - 0 1";
   static const TEST_FEN_IM_KBvK = "8/8/8/2k1B3/8/8/2Kp4/8 b - - 0 1";
   static const TEST_FEN_IM_KBvKB = "8/8/8/2k1B3/1b6/8/2Kp4/8 b - - 0 1";
@@ -24,7 +25,14 @@ class BoardHelper {
   static const TEST_FEN_EG_WHITE_KNBvK = "8/8/6b1/5n1k/1K6/8/8/8 w - - 0 1";
 
   static const BOARD_FEN_Saragossa_Opening = "rn2r1k1/pb3pp1/1pq2n1p/4p3/2P5/2NBRN1P/PPQ2PPK/R7 w - - 0 17";
+  static RegExp regexFenCheck = RegExp(r'^((([pnbrqkPNBRQK1-8]{1,8})\/?){8})\s(!|@)\s(b|w)\s(-|K?Q?k?q)\s(-|[a-h][3-6])\s(\d+)\s+(\d+)\s*$');
+  static RegExp regexBoardCheck = RegExp(r'^((([pnbrqkPNBRQK1-8]{1,8})\/?){8})$');
+  static RegExp regexMoveCheck = RegExp(r'^(b|w)$');
+  static RegExp regexCastlingRightCheck = RegExp(r'^(-|K?Q?k?q)$');
+  static RegExp regexEnPassantCheck = RegExp(r'^(-|[a-h][3-6])$');
+  static RegExp regexNoCaptureOrPawnMoveCheck = RegExp(r'^(\d+)$');
 
+  // static RegExp regexFenCheck = RegExp(r'^[rnbqkpRNBQKP1-8\/]+ [wb] (?:K?Q?k?q?|\-) (?:\-|[a-h][36]) \d+ \d+$');
   static String rowName = "87654321";
   static String colName = "abcdefgh";
 
@@ -88,6 +96,7 @@ class BoardHelper {
         }
       }
     }
+    board.currentKingCastleRight = 15;
 
     if (!listFenBoard[2].contains("K")) {
       board.currentKingCastleRight &= GameState.clearWhiteKingsideMask;
@@ -102,11 +111,11 @@ class BoardHelper {
       board.currentKingCastleRight &= GameState.clearBlackQueensideMask;
     }
 
-    if (!listFenBoard[3].contains('-')) {
-      col = listFenBoard[3].codeUnitAt(0) - 'a'.codeUnitAt(0);
-      row = int.parse(listFenBoard[3].substring(1)) - 1;
-      // board.enPassantPos = indexFromRowCol(row, col);
-    }
+    // if (!listFenBoard[3].contains('-')) {
+    //   col = listFenBoard[3].codeUnitAt(0) - 'a'.codeUnitAt(0);
+    //   row = int.parse(listFenBoard[3].substring(1)) - 1;
+    //   board.currentEnPassantPos = indexFromRowCol(row, col);
+    // }
     return listFenBoard[1].contains('w') ? true : false;
   }
 }

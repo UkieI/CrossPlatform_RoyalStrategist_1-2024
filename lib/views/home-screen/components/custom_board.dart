@@ -1,11 +1,11 @@
 // ignore_for_file: prefer_typing_uninitialized_variables
 
-import 'package:chess_flutter_app/common/widgets/popup/pop_up_pawn_promotion.dart';
 import 'package:chess_flutter_app/common/widgets/square/square.dart';
-import 'package:chess_flutter_app/controller/chess_board_controller.dart';
+
 import 'package:chess_flutter_app/controller/custom_board_controller.dart';
+import 'package:chess_flutter_app/logic/board/piece.dart';
 import 'package:chess_flutter_app/logic/helpers/board_helpers.dart';
-import 'package:chess_flutter_app/utils/device/device_utility.dart';
+
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 
@@ -37,12 +37,12 @@ class CustomBoard extends StatelessWidget {
                         // bool isPreviousMoved = controller.isPreviousMoved(index);
                         // Check all valid selected pieces move
                         return Square(
-                          isWhite: BoardHelper.sameSquareColor(index),
+                          squareColor: BoardHelper.sameSquareColor(index),
                           indexSquare: index,
                           piece: controller.board.square[index],
                           isKingIncheck: false,
-                          previousMoved: false,
-                          isWhiteTurn: controller.board.isWhiteToMove,
+                          previousMoved: controller.isPreviousMoved(index),
+                          isWhiteTurn: true,
                           isSelected: isSelected,
                           isCaptured: false,
                           isValidMove: false,

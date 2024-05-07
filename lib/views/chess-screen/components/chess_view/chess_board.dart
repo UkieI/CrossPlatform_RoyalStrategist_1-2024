@@ -48,7 +48,7 @@ class ChessBoard extends StatelessWidget {
                           }
                         }
                         return Square(
-                          isWhite: BoardHelper.sameSquareColor(index),
+                          squareColor: BoardHelper.sameSquareColor(index),
                           indexSquare: index,
                           piece: controller.board.square[index],
                           isKingIncheck: isKingInCheck,

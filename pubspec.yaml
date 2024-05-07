@@ -48,6 +48,8 @@ dependencies:
   flutter_svg: ^2.0.10+1
   shared_preferences: ^2.2.3
   flutter_color_utils: ^0.0.1
+ 
+  fluttertoast: ^8.0.9
   # State Management
   get: ^4.6.6
   

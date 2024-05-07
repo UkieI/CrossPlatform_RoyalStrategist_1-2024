@@ -21,9 +21,9 @@ class GameMode {
   static const BlackSide = 1;
   static const RandomSide = 2;
 
-  static const VsAiMode = 1;
-  static const PassAndPlayMode = 2;
-  static const CustomBoardMode = 0;
+  static const VsAiMode = 0;
+  static const PassAndPlayMode = 1;
+  static const CustomBoardMode = 2;
 
   // difficulty index
   // 0 : no hint and redo, 1 :  allow redo and undo, 2 : allow redo and hint

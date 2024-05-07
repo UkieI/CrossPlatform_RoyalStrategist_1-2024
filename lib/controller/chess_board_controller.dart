@@ -462,8 +462,8 @@ class ChessBoardController extends GetxController {
     int enPassantPos = ms.enPassantPos;
     // int enPassantPos = (previousMove!.start + previousMove!.end) ~/ 2;
     var castleRights = ms.castlingRights;
-    List<bool> isWhiteCastleRight = [hasQueensideCastleRight(castleRights, true), hasQueensideCastleRight(castleRights, true)];
-    List<bool> isBlackCastleRight = [hasQueensideCastleRight(castleRights, false), hasQueensideCastleRight(castleRights, false)];
+    List<bool> isWhiteCastleRight = [hasQueensideCastleRight(castleRights, true), hasKingsideCastleRight(castleRights, true)];
+    List<bool> isBlackCastleRight = [hasQueensideCastleRight(castleRights, false), hasKingsideCastleRight(castleRights, false)];
 
     stateString = StateBoardString(
       square,

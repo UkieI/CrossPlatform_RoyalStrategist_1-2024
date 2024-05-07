@@ -81,10 +81,10 @@ class Board {
   }
 }
 
-MoveStack push(Board board, Move move, {int promotionType = Piece.None}) {
+MoveStack push(Board board, Move move, {int promotionType = Piece.None, int movedPieces = Piece.None}) {
   var ms = MoveStack(
     move,
-    movedPiece: board.square[move.start],
+    movedPiece: movedPieces != Piece.None ? movedPieces : board.square[move.start],
     takenPiece: board.square[move.end],
     enPassantPos: -1,
     castlingRights: board.currentKingCastleRight,
@@ -96,7 +96,7 @@ MoveStack push(Board board, Move move, {int promotionType = Piece.None}) {
 
   // isEnPassant bool
 
-  int movedPiece = board.square[startSquare];
+  int movedPiece = ms.movedPiece;
   int movedPieceType = Piece.pieceType(movedPiece);
 
   int prevCastleState = board.currentKingCastleRight;
@@ -274,7 +274,9 @@ MoveStack pop(Board board) {
 
 void makeMove(Board board, MoveStack ms) {
   setSquare(board, ms.move.end, ms.movedPiece);
-  setSquare(board, ms.move.start, Piece.None);
+  if (BoardHelper.isInBoard(ms.move.start)) {
+    setSquare(board, ms.move.start, Piece.None);
+  }
 
   makeMovePos(ms.movedPiece, ms.move.start, ms.move.end, board);
 }

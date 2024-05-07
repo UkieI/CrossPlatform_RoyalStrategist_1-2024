@@ -1,8 +1,9 @@
+import 'package:chess_flutter_app/logic/helpers/board_helpers.dart';
 import 'package:chess_flutter_app/model/game_mode.dart';
 import 'package:chess_flutter_app/utils/constants/colors.dart';
 import 'package:chess_flutter_app/utils/constants/sizes.dart';
 import 'package:chess_flutter_app/views/chess-screen/chess_view.dart';
-import 'package:chess_flutter_app/views/home-screen/screens/pass-and-play/custom_view_board_view.dart';
+import 'package:chess_flutter_app/views/home-screen/screens/pass-and-play/custom_board_view.dart';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:iconsax/iconsax.dart';
@@ -296,6 +297,15 @@ class PassAndPlayController extends GetxController {
   RxString timeGame = "None".obs;
   RxInt indexTypeGame = 0.obs;
   RxInt indexTimeGame = 9.obs;
+  @override
+  void onInit() async {
+    super.onInit();
+    SharedPreferences pref = await SharedPreferences.getInstance();
+    indexTypeGame.value = pref.getInt("previousTypeMode") == null ? 0 : pref.getInt("previousTypeMode")!;
+    indexTimeGame.value = pref.getInt("previousTimeMode") == null ? 9 : pref.getInt("previousTimeMode")!;
+    typeGame.value = typeGameString[indexTypeGame.value]!;
+    timeGame.value = timeControlString[indexTimeGame.value]!;
+  }
 
   Map<int, String> typeGameString = {
     0: "Standard",
@@ -332,6 +342,7 @@ class PassAndPlayController extends GetxController {
 
   Future<GameMode> initGameBoard(int modeFlag) async {
     SharedPreferences pref = await SharedPreferences.getInstance();
+
     // pref.setString('themePiece', '');
     String theme, wSquare = '', bSquare = '';
     double timer = 0, bonusTime = 0;
@@ -358,6 +369,8 @@ class PassAndPlayController extends GetxController {
       wSquare = pref.getString('wSquare')!;
       bSquare = pref.getString('bSquare')!;
     }
+    String? fenString = pref.getString('customFen');
+    fenString ??= BoardHelper.INIT_FEN;
 
     GameMode mode = GameMode(
       modeFlags: modeFlag,
@@ -367,8 +380,11 @@ class PassAndPlayController extends GetxController {
       startingSide: GameMode.WhiteSide,
       timer: timer,
       bonusTime: bonusTime,
+      customFen: indexTypeGame.value == GameMode.CustomBoardMode ? fenString : "",
     );
 
+    pref.setInt("previousTypeMode", indexTypeGame.value);
+    pref.setInt("previousTimeMode", indexTimeGame.value);
     return mode;
   }
 }
